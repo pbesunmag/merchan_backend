@@ -11,11 +11,11 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI docConfig(){
         return new OpenAPI().info(new Info()
-                .title("Documentación API REST Biblioteca")
+                .title("Documentación API REST Merchandising Avengers Shop")
                 .version("0.0.1")
-                .description("Alquiler de libros")
+                .description("Personalización de productos con tus personajes favoritos de Avengers")
                 .contact(new Contact()
-                        .name("Pol, Linneth y Lucia")
-                        .email("soporte@hackaboss.com")));
+                        .name("Pol y Linneth")
+                        .email("soporte@avengersshop.com")));
     }
 }
