@@ -18,16 +18,29 @@ public class Producto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
- @Column(name = "nombre")
+    @Column(name = "nombre")
     private String nombre;
 
- @Column(name = "descripcion")
+    @Column(length = 1000, name = "descripcion")
     private String descripcion;
 
- @Column(name = "precio")
+    private String personaje;
+
+    @Column(nullable = false, precision = 10, scale = 2 , name = "precio")
     private BigDecimal precio;
 
- @Column(name = "disponible")
+    @Column(nullable = false, name = "disponible")
     private Boolean disponible;
+
+    @Column(nullable = false, name = "personalizable")
+    private boolean personalizable = false;
+
+    @Column(nullable = false, name = "activo")
+    private boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private Categoria categoria;
+
 
 }
