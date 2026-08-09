@@ -2,7 +2,7 @@ package avengersshop.merchan_backend.controllers;
 
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
-import avengersshop.merchan_backend.services.AvengersShopService;
+import avengersshop.merchan_backend.services.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequestMapping("/api/productos")
 @CrossOrigin(origins = "*") // Permite peticiones desde el frontend
 public class ProductoController {
-    private final AvengersShopService avengersShopService;
+    private final ProductoService productoService;
 
-    public ProductoController(AvengersShopService avengersShopService) {
-        this.avengersShopService = avengersShopService;
+    public ProductoController(ProductoService productoService) {
+        this.productoService = productoService;
     }
 
     //Listar productos con filtros
@@ -32,31 +32,27 @@ public class ProductoController {
             @RequestParam(required = false) String ordenacion,
             @RequestParam(required = false) String tipoOrdenacion
     ) {
-        List<ProductoDTO> productos = avengersShopService.listarProductos(activos, idCategoria, ordenacion, tipoOrdenacion);
-        return ResponseEntity.status(HttpStatus.OK).body(productos);
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.listarProductos(activos, idCategoria, ordenacion, tipoOrdenacion));
     }
 
     //Creamos nuevo producto
     @PostMapping
     public ResponseEntity<ProductoDTO> crearProducto(@Valid @RequestBody CrearProductoDTO crearProductoDto) {
-        ProductoDTO nuevoProducto = avengersShopService.crearProducto(crearProductoDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crearProducto(crearProductoDto));
     }
 
     //Actualizamos un producto existente
     @PutMapping("/{id}")
     public ResponseEntity<ProductoDTO> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody CrearProductoDTO crearProductoDto
+            @Valid @RequestBody CrearProductoDTO crearProductoDto
     ) {
-        ProductoDTO productoActualizado = avengersShopService.actualizarProducto(id, crearProductoDto);
-        return ResponseEntity.status(HttpStatus.OK).body(productoActualizado);
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.actualizarProducto(id, crearProductoDto));
     }
 
     //Desactivamos producto
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ProductoDTO> desactivarProducto(@PathVariable Long id) {
-        ProductoDTO productoDesactivado = avengersShopService.desactivarProducto(id);
-        return ResponseEntity.status(HttpStatus.OK).body(productoDesactivado);
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.desactivarProducto(id));
     }
 }
