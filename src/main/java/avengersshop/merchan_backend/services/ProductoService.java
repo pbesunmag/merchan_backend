@@ -2,6 +2,7 @@ package avengersshop.merchan_backend.services;
 
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
+import avengersshop.merchan_backend.exceptions.BadRequestException;
 import avengersshop.merchan_backend.exceptions.ResourceNotFoundException;
 import avengersshop.merchan_backend.models.Categoria;
 import avengersshop.merchan_backend.models.Producto;
@@ -9,10 +10,12 @@ import avengersshop.merchan_backend.repositories.ICategoriaRepository;
 import avengersshop.merchan_backend.repositories.IProductoRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class ProductoService {
 
     private final IProductoRepository iProductoRepository;
@@ -23,63 +26,53 @@ public class ProductoService {
         this.iCategoriaRepository = iCategoriaRepository;
     }
 
-    //Listamos productos con filtros opcionales y ordenacion por precio directamente desde MySQL
+    @Transactional(readOnly = true)
     public List<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, String ordenacion, String tipoOrdenacion) {
 
-        // Configuración de la ordenación para la consulta de MySQL
+        // Configuración de la ordenación
         Sort sort = Sort.unsorted();
         if ("precio".equalsIgnoreCase(ordenacion)) {
             Sort.Direction direccion = "DESC".equalsIgnoreCase(tipoOrdenacion) ? Sort.Direction.DESC : Sort.Direction.ASC;
             sort = Sort.by(direccion, "precio");
         }
 
-        List<Producto> productos;
-
-        // Delegamos el filtrado a las consultas de MySQL
-        if (activos != null && idCategoria != null) {
-            productos = iProductoRepository.findByActivoAndCategoriaId(activos, idCategoria, sort);
-        } else if (activos != null) {
-            productos = iProductoRepository.findByActivo(activos, sort);
-        } else if (idCategoria != null) {
-            productos = iProductoRepository.findByCategoriaId(idCategoria, sort);
-        } else {
-            productos = iProductoRepository.findAll(sort);
-        }
+        // Delegamos todo el filtrado condicional a una sola llamada
+        List<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, sort);
 
         return productos.stream().map(ProductoDTO::fromEntity).toList();
     }
 
-    //Creamos producto
     public ProductoDTO crearProducto(CrearProductoDTO crearProductoDto) {
-        //Buscamos la categoría en BD. Si no existe, lanzamos la excepción personalizada de 404 NOT FOUND
+        // Validación de duplicados por nombre
+        if (iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
+            throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
+        }
+
         Categoria categoria = iCategoriaRepository.findById(crearProductoDto.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + crearProductoDto.getCategoriaId()));
+
         Producto producto = new Producto();
         producto.setNombre(crearProductoDto.getNombre());
         producto.setDescripcion(crearProductoDto.getDescripcion());
         producto.setPersonaje(crearProductoDto.getPersonaje());
         producto.setPrecio(crearProductoDto.getPrecio());
 
-        //Convertimos "Si"(con tilde) / "Si" (sin tilde) a boolean
         boolean esPersonalizable = parsearEsPersonalizable(crearProductoDto.getPersonalizable());
 
         producto.setPersonalizable(esPersonalizable);
         producto.setCategoria(categoria);
-        producto.setActivo(true); //Al crear el producto se marca como activo por defecto
+        producto.setActivo(true);
         producto.setDisponible(true);
 
         Producto productoGuardado = iProductoRepository.save(producto);
         return ProductoDTO.fromEntity(productoGuardado);
     }
 
-    //Actualizamos producto existente
     public ProductoDTO actualizarProducto(Long id, CrearProductoDTO crearProductoDto) {
 
-        //Buscamos si existe el producto a modificar
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
-        //Buscamos la nueva categoría
         Categoria categoria = iCategoriaRepository.findById(crearProductoDto.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + crearProductoDto.getCategoriaId()));
 
@@ -88,7 +81,6 @@ public class ProductoService {
         producto.setPersonaje(crearProductoDto.getPersonaje());
         producto.setPrecio(crearProductoDto.getPrecio());
 
-        //Convertimos "Si"(con tilde) / "Si" (sin tilde) a boolean
         boolean esPersonalizable = parsearEsPersonalizable(crearProductoDto.getPersonalizable());
 
         producto.setPersonalizable(esPersonalizable);
@@ -98,21 +90,17 @@ public class ProductoService {
         return ProductoDTO.fromEntity(productoActualizado);
     }
 
-    //Descativamos producto
     public ProductoDTO desactivarProducto(Long id) {
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
-        // Desactivamos cambiando su estado a inactivo
         producto.setActivo(false);
 
         Producto productoDesactivado = iProductoRepository.save(producto);
         return ProductoDTO.fromEntity(productoDesactivado);
     }
 
-    // Método auxiliar privado para no duplicar la conversión
     private boolean parsearEsPersonalizable(String texto) {
         return texto != null && (texto.equalsIgnoreCase("Sí") || texto.equalsIgnoreCase("Si"));
     }
 }
-

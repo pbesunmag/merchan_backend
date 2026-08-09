@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ITerminalRepository extends JpaRepository<Terminal, Long> {
 
-
+    // Comprobación de duplicados ignorando mayúsculas y minúsculas
+    boolean existsByNombreIgnoreCase(String nombre);
 }
