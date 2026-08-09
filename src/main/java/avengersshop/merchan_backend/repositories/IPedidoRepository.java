@@ -1,6 +1,5 @@
 package avengersshop.merchan_backend.repositories;
 
-import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.models.EstadoPedido;
 import avengersshop.merchan_backend.models.Pedido;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +14,7 @@ public interface IPedidoRepository extends JpaRepository<Pedido, Long> {
     // Buscamos un pedido específico por su código único
     Optional<Pedido> findByCodigo(String codigo);
 
-    // Listamos todos los pedidios por fecha ascendente
+    // Listamos todos los pedidos por fecha ascendente
     List<Pedido> findAllByOrderByFechaCreacionAsc();
 
     // Listamos pedidos filtrados por estado y ordenados por fecha ascendente

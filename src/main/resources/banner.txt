@@ -1,0 +1,22 @@
+${AnsiBackground.DEFAULT}                  ${AnsiBackground.RED}${AnsiColor.BRIGHT_WHITE}                     ${AnsiBackground.DEFAULT}
+${AnsiBackground.DEFAULT}                  ${AnsiBackground.RED}${AnsiColor.BRIGHT_WHITE}    M A R V E L      ${AnsiBackground.DEFAULT}
+${AnsiBackground.DEFAULT}                  ${AnsiBackground.RED}${AnsiColor.BRIGHT_WHITE}                     ${AnsiBackground.DEFAULT}
+
+${AnsiColor.BRIGHT_CYAN}
+      /\   _   _ _____ _   _  ____ _____ ____    _   ____
+     /  \ | | | |  ___| \ | |/ ___|  ___|  _ \  | | / ___|
+    / /\ \| | | | |__ |  \| | |  _| |__ | |_) | |_| \___ \
+   / /__\ \ \_/ /  __|| . ` | |_| |  __||  _ <       ___) |
+  / /______\   /| |___| |\  |\____| |___| | \ \     |____/
+ /_/        \_/ \____/\_| \_/     \____/\_|  \_\
+
+${AnsiColor.BRIGHT_YELLOW}
+             ____  _   _  ___  ____  
+            / ___|| | | |/ _ \|  _ \ 
+            \___ \| |_| | | | | |_) |
+             ___) |  _  | |_| |  __/ 
+            |____/|_| |_|\___/|_|    
+
+${AnsiColor.BRIGHT_WHITE}
+ :: ${spring.application.name} :: (v${spring-boot.version})
+${AnsiColor.DEFAULT}
