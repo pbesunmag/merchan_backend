@@ -3,6 +3,7 @@ package avengersshop.merchan_backend.controllers;
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
 import avengersshop.merchan_backend.services.AvengersShopService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class ProductoController {
 
     //Creamos nuevo producto
     @PostMapping
-    public ResponseEntity<ProductoDTO> crearProducto(@RequestBody CrearProductoDTO crearProductoDto) {
+    public ResponseEntity<ProductoDTO> crearProducto(@Valid @RequestBody CrearProductoDTO crearProductoDto) {
         ProductoDTO nuevoProducto = avengersShopService.crearProducto(crearProductoDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
     }

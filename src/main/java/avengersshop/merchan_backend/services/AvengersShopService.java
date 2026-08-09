@@ -13,11 +13,10 @@ import avengersshop.merchan_backend.models.Terminal;
 import avengersshop.merchan_backend.repositories.ICategoriaRepository;
 import avengersshop.merchan_backend.repositories.IProductoRepository;
 import avengersshop.merchan_backend.repositories.ITerminalRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 public class AvengersShopService {
@@ -69,30 +68,30 @@ public class AvengersShopService {
     }
 
     //MÉTODOS DE PRODUCTOS
-    //Listamos productos con filtros opcionales y ordenacion por precio
+    //Listamos productos con filtros opcionales y ordenacion por precio directamente desde MySQL
     public List<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, String ordenacion, String tipoOrdenacion) {
-        Stream<Producto> streamProducto = iProductoRepository.findAll().stream();
-        //Filtro por activos
-        if (activos != null){
-            streamProducto = streamProducto.filter(p -> p.isActivo() == activos);
+
+        // Configuración de la ordenación para la consulta de MySQL
+        Sort sort = Sort.unsorted();
+        if ("precio".equalsIgnoreCase(ordenacion)) {
+            Sort.Direction direccion = "DESC".equalsIgnoreCase(tipoOrdenacion) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sort = Sort.by(direccion, "precio");
         }
 
-        //Filtro por ID de categoría
-        if (idCategoria != null){
-            streamProducto = streamProducto.filter(p -> p.getCategoria() != null && p.getCategoria().getId().equals(idCategoria));
+        List<Producto> productos;
+
+        // Delegamos el filtrado a las consultas de MySQL
+        if (activos != null && idCategoria != null) {
+            productos = iProductoRepository.findByActivoAndCategoriaId(activos, idCategoria, sort);
+        } else if (activos != null) {
+            productos = iProductoRepository.findByActivo(activos, sort);
+        } else if (idCategoria != null) {
+            productos = iProductoRepository.findByCategoriaId(idCategoria, sort);
+        } else {
+            productos = iProductoRepository.findAll(sort);
         }
 
-        //Ordenación por precio si se solicita
-        if("precio".equalsIgnoreCase(ordenacion)){
-            if("DESC".equalsIgnoreCase(tipoOrdenacion)){
-                //Ordena de mayor a menor el precio
-                streamProducto = streamProducto.sorted(Comparator.comparing(Producto::getPrecio).reversed());
-            } else {
-                //Ordena de menor a mayor el precio
-                streamProducto = streamProducto.sorted(Comparator.comparing(Producto::getPrecio));
-            }
-        }
-        return streamProducto.map(ProductoDTO::fromEntity).toList();
+        return productos.stream().map(ProductoDTO::fromEntity).toList();
     }
 
     //Creamos producto
@@ -107,9 +106,7 @@ public class AvengersShopService {
         producto.setPrecio(crearProductoDto.getPrecio());
 
         //Convertimos "Si"(con tilde) / "Si" (sin tilde) a boolean
-        boolean esPersonalizable = crearProductoDto.getPersonalizable() != null &&
-                (crearProductoDto.getPersonalizable().equalsIgnoreCase("Sí") ||
-                        crearProductoDto.getPersonalizable().equalsIgnoreCase("Si"));
+        boolean esPersonalizable = parsearEsPersonalizable(crearProductoDto.getPersonalizable());
 
         producto.setPersonalizable(esPersonalizable);
         producto.setCategoria(categoria);
@@ -135,9 +132,8 @@ public class AvengersShopService {
         producto.setPersonaje(crearProductoDto.getPersonaje());
         producto.setPrecio(crearProductoDto.getPrecio());
 
-        boolean esPersonalizable = crearProductoDto.getPersonalizable() != null &&
-                (crearProductoDto.getPersonalizable().equalsIgnoreCase("Sí") ||
-                        crearProductoDto.getPersonalizable().equalsIgnoreCase("Si"));
+        //Convertimos "Si"(con tilde) / "Si" (sin tilde) a boolean
+        boolean esPersonalizable = parsearEsPersonalizable(crearProductoDto.getPersonalizable());
 
         producto.setPersonalizable(esPersonalizable);
         producto.setCategoria(categoria);
@@ -158,4 +154,8 @@ public class AvengersShopService {
         return ProductoDTO.fromEntity(productoDesactivado);
     }
 
+    // Método auxiliar privado para no duplicar la conversión
+    private boolean parsearEsPersonalizable(String texto) {
+        return texto != null && (texto.equalsIgnoreCase("Sí") || texto.equalsIgnoreCase("Si"));
+    }
 }

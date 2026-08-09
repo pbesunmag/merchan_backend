@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/terminales")
+@CrossOrigin(origins = "*")
 public class TerminalController {
     private final AvengersShopService avengersShopService;
 
