@@ -2,7 +2,7 @@ package avengersshop.merchan_backend.controllers;
 
 import avengersshop.merchan_backend.dto.request.CrearCategoriaDTO;
 import avengersshop.merchan_backend.dto.response.CategoriaDTO;
-import avengersshop.merchan_backend.services.AvengersShopService;
+import avengersshop.merchan_backend.services.CategoriaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +15,16 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class CategoriaController {
 
-    private final AvengersShopService avengersShopService;
-    public CategoriaController(AvengersShopService avengersShopService) {
-        this.avengersShopService = avengersShopService;
+    private final CategoriaService categoriaService;
+
+    public CategoriaController(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
     }
 
     //Obtenemos todas las categorías
     @GetMapping
     public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
-        List<CategoriaDTO> categorias = avengersShopService.listarCategorias();
-        return ResponseEntity.status(HttpStatus.OK).body(categorias);
+        return ResponseEntity.status(HttpStatus.OK).body(categoriaService.listarCategorias());
     }
 
     //Creamos nueva categoría
@@ -32,7 +32,6 @@ public class CategoriaController {
     // La anotación @RequestBody lo recibe y convierte en el objeto CrearCategoriaDTO.
     @PostMapping
     public ResponseEntity<CategoriaDTO> crearCategoria(@Valid @RequestBody CrearCategoriaDTO categoriaDTO) {
-        CategoriaDTO nuevaCategoria = avengersShopService.crearCategoria(categoriaDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCategoria);
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crearCategoria(categoriaDTO));
     }
 }
