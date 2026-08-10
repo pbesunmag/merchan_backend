@@ -27,7 +27,7 @@ public class PedidoController {
 
     //Listamos los pedidos filtrados por estado
     @GetMapping
-    public ResponseEntity<List<PedidoDTO>> listarPedidos(@RequestParam(required = false)EstadoPedido estadoPedido) {
+    public ResponseEntity<List<PedidoDTO>> listarPedidosPorEstado(@RequestParam(required = false)EstadoPedido estadoPedido) {
         return ResponseEntity.status(HttpStatus.OK).body(pedidoService.listarPedidosPorEstado(estadoPedido));
     }
 
