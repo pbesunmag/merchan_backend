@@ -12,7 +12,7 @@ public class OpenApiConfig {
     public OpenAPI docConfig(){
         return new OpenAPI().info(new Info()
                 .title("Documentación API REST Merchandising Avengers Shop")
-                .version("0.0.1")
+                .version("4.1.0")
                 .description("Personalización de productos con tus personajes favoritos de Avengers")
                 .contact(new Contact()
                         .name("Pol y Linneth")
