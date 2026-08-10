@@ -2,14 +2,16 @@ package avengersshop.merchan_backend.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -21,7 +23,7 @@ public class Pedido {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String codigo; // Generado ej: "AV-102" o "A123"
+    private String codigo; // Ej: "AV-1001"
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -36,4 +38,15 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PedidoProducto> lineas = new ArrayList<>();
+
+    // Métodos helper para mantener ambos lados de la relación sincronizados
+    public void agregarLinea(PedidoProducto linea) {
+        lineas.add(linea);
+        linea.setPedido(this);
+    }
+
+    public void removerLinea(PedidoProducto linea) {
+        lineas.remove(linea);
+        linea.setPedido(null);
+    }
 }
