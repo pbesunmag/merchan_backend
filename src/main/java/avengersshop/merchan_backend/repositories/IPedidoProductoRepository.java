@@ -8,4 +8,6 @@ import java.util.List;
 
 @Repository
 public interface IPedidoProductoRepository extends JpaRepository<PedidoProducto, Long> {
+
+
 }

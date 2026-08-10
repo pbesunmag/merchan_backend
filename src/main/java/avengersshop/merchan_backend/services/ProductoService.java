@@ -62,7 +62,6 @@ public class ProductoService {
         producto.setPersonalizable(esPersonalizable);
         producto.setCategoria(categoria);
         producto.setActivo(true);
-        producto.setDisponible(true);
 
         Producto productoGuardado = iProductoRepository.save(producto);
         return ProductoDTO.fromEntity(productoGuardado);
