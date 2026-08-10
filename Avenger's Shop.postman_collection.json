@@ -208,6 +208,227 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Crear Pedido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"terminalId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Añadir productos al pedido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"productoId\": 1,\r\n  \"cantidad\": 2,\r\n  \"textoPersonalizado\": \"Propiedad de Tony Stark\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "productos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar producto del pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/productos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "productos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar pedido por código",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/codigo/AV-1001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "codigo",
+                "AV-1001"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos?estado=CREADO",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "CREADO"
+                },
+                {
+                  "key": "estado",
+                  "value": "CONFIRMACION_DE_PAGO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "PAGO_ACEPTADO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "EN_PREPARACION",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "PEDIDO_LISTO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "ENVIADO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "ENTREGADO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "CANCELADO",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar pedidos para pantalla de comandas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/pantalla",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "pantalla"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
