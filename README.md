@@ -29,3 +29,58 @@ No es solo una API de prueba: es una solución completa pensada para simular el 
 * **Swagger UI / Springdoc OpenAPI**
 
 ---
+
+## ⚙️ Requisitos previos
+
+* **Java JDK 21** instalado.
+* **MySQL Server** ejecutándose en local o servidor.
+* **Maven** instalado
+
+---
+
+## 📖 Documentación Interactiva & Postman
+
+* **🌐 Swagger UI:** Una vez arrancada la aplicación, puedes probar interactiva y visualmente todos los endpoints accediendo a *http://localhost:8080/swagger-ui.html*
+* **📬 Colección Postman:** En la raíz del proyecto se incluye el archivo de colección para Postman listo para importar.
+
+---
+
+## 📌 Resumen de Endpoints REST
+
+El servidor se iniciará por defecto en *http://localhost:8080*
+
+**🖥️ Terminales** (*/api/terminales*)
+* *GET /api/terminales* - Listar terminales de venta.
+* *POST /api/terminales* - Crear nueva terminal.
+
+**🏷️ Categorías** (*/api/categorias*)
+* *GET /api/categorias* - Listar todas las categorías.
+* *POST /api/categorias* - Crear nueva categoría.
+
+**📦 Productos** (*/api/productos*)
+* *GET /api/productos* - Listar productos (admite filtros por *activos*, *idCategoría* y ordenación por precio).
+* *POST /api/productos* - Crear nuevo producto.
+* *PUT /api/productos/{id}* - Actualizar un producto existente.
+* *PATCH /api/productos/{id}/desactivar* - Desactivar/borrado lógico de un producto.
+* *PATCH /api/productos/{id}/reactivar* - Reactivar un producto previamente desactivado.
+
+**📋 Pedidos**
+* *POST /api/pedidos* - Iniciar un nuevo pedido desde terminal generando un código automático.
+* *POST /api/pedidos/{pedidoId}/productos* - Añadir un producto con opción de texto personalizado.
+* *DELETE /api/pedidos/{pedidoId}/productos/{productoId}* - Eliminar producto del pedido.
+* *PATCH /api/pedidos/{pedidoId}/estado* - Cambiar el estado del pedido.
+* *GET /api/pedidos?estado={ESTADO}* - Listar todos los pedidos o filtrados por estado.
+* *GET /api/pedidos/pantalla* - Vista resumida de pedidos para pantallas del local.
+
+---
+
+## 👥 Autores y Créditos
+* Pol Bastida Gonzalez ⚡
+* Linneth Rodrigues 🚀
+
+
+
+
+
+
+
