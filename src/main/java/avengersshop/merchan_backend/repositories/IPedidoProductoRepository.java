@@ -8,8 +8,4 @@ import java.util.List;
 
 @Repository
 public interface IPedidoProductoRepository extends JpaRepository<PedidoProducto, Long> {
-
-    // Obtenemos todos los detalles de un pedido por su ID
-    List<PedidoProducto> findByPedidoId(Long pedidoId);
-
 }

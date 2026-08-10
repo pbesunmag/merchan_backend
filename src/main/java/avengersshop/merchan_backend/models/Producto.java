@@ -29,9 +29,6 @@ public class Producto {
     @Column(nullable = false, precision = 10, scale = 2 , name = "precio")
     private BigDecimal precio;
 
-    @Column(nullable = false, name = "disponible")
-    private Boolean disponible;
-
     @Column(nullable = false, name = "personalizable")
     private boolean personalizable = false;
 
