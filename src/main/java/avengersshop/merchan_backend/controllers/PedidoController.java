@@ -20,8 +20,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*")
-@Tag(name = "📋 Pedidos", description = "Endpoints para el control de comandas y gestión de pedidos")
+@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@Tag(name = "📋 Pedidos", description = "Endpoints para el control de comandas y gestión de pedidos") // Categorización en Swagger UI
 public class PedidoController {
 
     private final PedidoService pedidoService;
@@ -30,6 +30,7 @@ public class PedidoController {
         this.pedidoService = pedidoService;
     }
 
+    // Documentación OpenAPI/Swagger para la consulta paginada
     @Operation(
             summary = "Listar pedidos paginados",
             description = "Obtiene los pedidos paginados con opción de filtrado por estado y ordenación cronológica."
@@ -39,8 +40,10 @@ public class PedidoController {
     })
     @GetMapping
     public ResponseEntity<Page<PedidoDTO>> listarPedidos(
+            // @Parameter enriquece la documentación Swagger sobre el enum de filtrado
             @Parameter(description = "Estado del pedido (CREADO, EN_PREPARACION, LISTO, ENTREGADO)")
             @RequestParam(required = false) EstadoPedido estado,
+            // @PageableDefault establece paginación por defecto (Página 0, 10 elementos por página, ordenados por fecha)
             @PageableDefault(page = 0, size = 10, sort = "fechaCreacion") Pageable pageable
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -71,6 +74,7 @@ public class PedidoController {
             @ApiResponse(responseCode = "200", description = "Listado para pantalla obtenido con éxito")
     })
     @GetMapping("/pantalla")
+    // Uso de un DTO optimizado (PedidoPantallaDTO) que solo muestra los campos mínimos requeridos para la pantalla que ve el cliente
     public ResponseEntity<List<PedidoPantallaDTO>> obtenerPedidosPantalla() {
         return ResponseEntity.status(HttpStatus.OK).body(
                 pedidoService.listarPedidosPantalla()

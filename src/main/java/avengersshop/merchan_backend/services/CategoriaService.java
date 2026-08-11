@@ -21,6 +21,7 @@ public class CategoriaService {
         this.iCategoriaRepository = iCategoriaRepository;
     }
 
+    // Obtiene todas las categorías registradas en la tienda y las convierte a DTO para la respuesta.
     @Transactional(readOnly = true)
     public List<CategoriaDTO> listarCategorias() {
         return iCategoriaRepository.findAll().stream()
@@ -28,6 +29,7 @@ public class CategoriaService {
                 .toList();
     }
 
+    // Busca una categoría por su ID o lanza una excepción si no existe en la base de datos.
     @Transactional(readOnly = true)
     public CategoriaDTO obtenerPorId(Long id) {
         Categoria categoria = iCategoriaRepository.findById(id)
@@ -35,6 +37,7 @@ public class CategoriaService {
         return CategoriaDTO.fromEntity(categoria);
     }
 
+    // Valida que el nombre no esté duplicado y crea una nueva categoría en el catálogo de la tienda.
     public CategoriaDTO crearCategoria(CrearCategoriaDTO crearCategoriaDTO) {
         if (iCategoriaRepository.existsByNombreIgnoreCase(crearCategoriaDTO.getNombre())) {
             throw new BadRequestException("Ya existe una categoría con el nombre: " + crearCategoriaDTO.getNombre());

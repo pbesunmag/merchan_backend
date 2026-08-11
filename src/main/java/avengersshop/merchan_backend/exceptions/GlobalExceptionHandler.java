@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Manejo de Recurso No Encontrado (404 NOT FOUND)
+    // Manejo de Recurso No Encontrado (HTTP 404 NOT FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-    // 2. Manejo de Errores de Validación de @Valid (400 BAD REQUEST)
+    // Manejo de Errores de Validación de @Valid en los DTOs (HTTP 400 BAD REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
         // Unificamos todos los errores de validación de los campos en un solo mensaje
@@ -41,19 +41,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // 3. Captura Genérica para Errores Inesperados (500 INTERNAL SERVER ERROR)
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Error Interno del Servidor",
-                ex.getMessage(),
-                LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
-    // 4.
+    // Captura de Excepciones de Lógica de Negocio Personalizadas (HTTP 400 BAD REQUEST)
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -63,6 +51,18 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
                 );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // Captura Genérica para Errores Inesperados (HTTP 500 INTERNAL SERVER ERROR)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Error Interno del Servidor",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
 }

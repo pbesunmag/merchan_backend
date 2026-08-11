@@ -17,7 +17,7 @@ public class ProductoDTO {
     private String nombre;
     private String descripcion;
     private String personaje;
-    private BigDecimal precio; // 👈 Coincide con BigDecimal de Producto.java
+    private BigDecimal precio; // Coincide con BigDecimal de Producto.java
     private String personalizable;
     private Boolean activo;
     private String nombreCategoria;
@@ -31,8 +31,10 @@ public class ProductoDTO {
                 producto.getDescripcion(),
                 producto.getPersonaje(),
                 producto.getPrecio(),
+                // Mapeo explicito del valor booleano a una cadena legible ("Sí" / "No")
                 producto.isPersonalizable() ? "Sí" : "No",
                 producto.isActivo(),
+                // Extrae el nombre de la categoría evitando un posible NullPointerException
                 producto.getCategoria() != null ? producto.getCategoria().getNombre() : null,
                 producto.getFechaCreacion(),
                 producto.getFechaActualizacion()

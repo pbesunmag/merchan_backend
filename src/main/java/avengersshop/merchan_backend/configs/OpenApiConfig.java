@@ -6,8 +6,10 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 
+// Clase de configuración personalizada para OpenAPI / Swagger UI
 @Configuration
 public class OpenApiConfig {
+    // Registra un Bean en el contenedor de Spring IoC para personalizar la cabecera e información general de Swagger UI.
     @Bean
     public OpenAPI docConfig(){
         return new OpenAPI().info(new Info()

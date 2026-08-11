@@ -17,7 +17,6 @@ public class CategoriaDTO {
     private String nombre;
     private String descripcion;
 
-    // 👈 AÑADIR ESTA LÍNEA QUE FALTA
     private List<ProductoDTO> productos;
 
     public static CategoriaDTO fromEntity(Categoria categoria) {

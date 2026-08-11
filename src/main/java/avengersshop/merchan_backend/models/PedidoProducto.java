@@ -17,20 +17,22 @@ public class PedidoProducto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY para optimizar memoria al consultar líneas individuales sin cargar todo el pedido.
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY para evitar llamadas innecesarias al catálogo de productos.
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private Integer cantidad; // Número de unidades solicitadas de este producto en particular
 
+    // Guardado del precio histórico unitario.
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precioUnitario;
 
+    // Campo de texto libre para grabados o estampados personalizados (ej. nombre para la camiseta de Marvel)
     @Column(length = 500)
     private String textoPersonalizado;
 }

@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*")
-@Tag(name = "📦 Productos", description = "Endpoints para la gestión del catálogo e inventario de productos")
+@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@Tag(name = "📦 Productos", description = "Endpoints para la gestión del catálogo e inventario de productos") // Categorización en Swagger UI
 public class ProductoController {
 
     private final ProductoService productoService;
@@ -28,6 +28,7 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
+    // Documentación Swagger de búsqueda paginada con filtros opcionales
     @Operation(
             summary = "Listar productos paginados",
             description = "Obtiene el listado de productos con soporte para paginación, ordenación y filtrado opcional por categoría o estado activo."
@@ -39,6 +40,7 @@ public class ProductoController {
     public ResponseEntity<Page<ProductoDTO>> listarProductos(
             @Parameter(description = "Filtrar por estado activo (true/false)") @RequestParam(required = false) Boolean activos,
             @Parameter(description = "ID de la categoría para filtrar") @RequestParam(required = false) Long idCategoria,
+            // @PageableDefault establece paginación por defecto (Página 0, 10 elementos por página, ordenados por fecha)
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -64,6 +66,7 @@ public class ProductoController {
     })
     @PostMapping
     public ResponseEntity<ProductoDTO> crearProducto(@Valid @RequestBody CrearProductoDTO crearProductoDto) {
+        // @Valid ejecuta las reglas de Bean Validation en el DTO
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crearProducto(crearProductoDto));
     }
 
@@ -96,6 +99,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     @PatchMapping("/{id}/reactivar")
+    // Permite restaurar un producto inactivo cambiando su estado sin eliminar registros
     public ResponseEntity<ProductoDTO> reactivarProducto(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.reactivarProducto(id));
     }

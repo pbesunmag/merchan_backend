@@ -16,8 +16,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/terminales")
-@CrossOrigin(origins = "*")
-@Tag(name = "🖥️ Terminales", description = "Endpoints para la gestión de puntos de venta y terminales físicas")
+@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@Tag(name = "🖥️ Terminales", description = "Endpoints para la gestión de puntos de venta y terminales físicas") // Categorización en Swagger UI
 public class TerminalController {
 
     private final TerminalService terminalService;
@@ -26,6 +26,7 @@ public class TerminalController {
         this.terminalService = terminalService;
     }
 
+    // Documentación Swagger de búsqueda paginada con filtros opcionales
     @Operation(
             summary = "Listar terminales",
             description = "Devuelve la lista completa de terminales de venta registradas."
@@ -48,6 +49,7 @@ public class TerminalController {
     })
     @PostMapping
     public ResponseEntity<TerminalDTO> crearTerminal(@Valid @RequestBody CrearTerminalDTO crearTerminalDTO) {
+        // @Valid: desencadena las restricciones definidas en el DTO (ej. @NotBlank)
         return ResponseEntity.status(HttpStatus.CREATED).body(terminalService.crearTerminal(crearTerminalDTO));
     }
 }

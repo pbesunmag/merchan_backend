@@ -13,5 +13,6 @@ public class CrearCategoriaDTO {
     @NotBlank(message = "El nombre de la categoría no puede estar vacío")
     private String nombre;
 
+    // Texto opcional para información complementaria de la categoría
     private String descripcion;
 }
