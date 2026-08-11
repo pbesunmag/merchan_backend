@@ -14,6 +14,7 @@ public class AgregarProductoPedidoDTO {
     @NotNull(message = "El ID del producto es obligatorio")
     private Long productoId;
 
+    // Regla de negocio: La cantidad debe estar presente y ser de al menos 1 unidad
     @NotNull(message = "La cantidad es obligatoria")
     @Min(value = 1, message = "La cantidad mínima debe ser 1")
     private Integer cantidad;

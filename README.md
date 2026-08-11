@@ -40,7 +40,7 @@ Este proyecto nace como el motor backend para una tienda online y sistema de ges
 ## 📖 Documentación Interactiva & Postman
 
 * 🌐 **Swagger UI:** Una vez arrancada la aplicación, puedes probar de forma interactiva y visual todos los endpoints accediendo a:  
-  👉 `http://localhost:8080/swagger-ui/index.html`
+  👉 `http://localhost:8080/doc/swagger-ui/index.html`
 * 📬 **Colección Postman:** En la raíz del proyecto se incluye el archivo de colección para Postman listo para importar.
 
 ---

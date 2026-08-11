@@ -14,6 +14,7 @@ import java.util.List;
 @Repository
 public interface IProductoRepository extends JpaRepository<Producto, Long> {
 
+    // Filtra el catálogo de la tienda por estado (activo/inactivo) y categoría, mostrando los resultados por páginas.
     @Query("SELECT p FROM Producto p WHERE " +
             "(:activo IS NULL OR p.activo = :activo) AND " +
             "(:categoriaId IS NULL OR p.categoria.id = :categoriaId)")
@@ -21,5 +22,6 @@ public interface IProductoRepository extends JpaRepository<Producto, Long> {
                                     @Param("categoriaId") Long categoriaId,
                                     Pageable pageable);
 
+    // Verifica si ya existe un merchandising registrado con ese nombre para evitar crear productos repetidos.
     boolean existsByNombreIgnoreCase(String nombre);
 }

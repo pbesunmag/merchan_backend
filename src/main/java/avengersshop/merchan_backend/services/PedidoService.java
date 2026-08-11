@@ -30,7 +30,7 @@ public class PedidoService {
         return pedidos.map(PedidoDTO::fromEntity);
     }
 
-    // Buscar pedido por código único
+    // Buscar la información de un pedido usando su código único de seguimiento
     @Transactional(readOnly = true)
     public PedidoDTO obtenerPorCodigo(String codigo) {
         Pedido pedido = iPedidoRepository.findByCodigo(codigo)

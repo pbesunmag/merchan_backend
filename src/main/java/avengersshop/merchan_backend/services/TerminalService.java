@@ -20,7 +20,7 @@ public class TerminalService {
         this.iTerminalRepository = terminalRepository;
     }
 
-    // Listamos todas las terminales
+    // Obtiene todos los puntos de venta registrados en la tienda para su selección en caja.
     @Transactional(readOnly = true)
     public List<TerminalDTO> listarTerminales() {
         return iTerminalRepository.findAll().stream()
@@ -28,7 +28,7 @@ public class TerminalService {
                 .toList();
     }
 
-    // Creamos nueva terminal con validación de duplicados
+    // Registra una nueva caja o punto de venta tras comprobar que el nombre no esté repetido.
     public TerminalDTO crearTerminal(CrearTerminalDTO terminalDto) {
         if (iTerminalRepository.existsByNombreIgnoreCase(terminalDto.getNombre())) {
             throw new BadRequestException("Ya existe una terminal con el nombre: " + terminalDto.getNombre());

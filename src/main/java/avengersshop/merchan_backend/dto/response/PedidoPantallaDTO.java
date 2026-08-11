@@ -15,6 +15,7 @@ public class PedidoPantallaDTO {
     private EstadoPedido estado;
 
     public static PedidoPantallaDTO fromEntity(Pedido pedido) {
+        // evita NullPointerException si se recibe una entidad nula
         if (pedido == null) return null;
         return new PedidoPantallaDTO(
                 pedido.getCodigo(),
