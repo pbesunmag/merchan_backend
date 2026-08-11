@@ -11,7 +11,7 @@
       "name": "Terminales",
       "item": [
         {
-          "name": "Listar Terminales",
+          "name": "listarTerminales",
           "request": {
             "method": "GET",
             "header": [],
@@ -31,13 +31,71 @@
           "response": []
         },
         {
-          "name": "Crear Terminal",
+          "name": "crearTerminal1",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"nombre\": \"Terminal Mostrador 01\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/terminales",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "terminales"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearTerminal2",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Terminal Mostrador 02\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/terminales",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "terminales"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearTerminal3",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Terminal Mostrador 03\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -65,10 +123,22 @@
       "name": "Catergorías",
       "item": [
         {
-          "name": "Listar Categorías",
+          "name": "listarCategorías",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
           "request": {
             "method": "GET",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "http://localhost:8080/api/categorias",
               "protocol": "http",
@@ -85,10 +155,77 @@
           "response": []
         },
         {
-          "name": "Crear Categoria",
+          "name": "crearCategoriaColeccionables",
           "request": {
             "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Coleccionables\",\r\n  \"descripcion\": \"Figuras de acción, réplicas y cómics de edición especial\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearCategoriaTazas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Tazas\",\r\n  \"descripcion\": \"Tazas oficiales de los Vengadores\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearCategoriaCamisetas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"nombre\": \"Camisetas\",\r\n\"descripcion\": \"Camisetas y prendas oficiales de los Vengadores\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "http://localhost:8080/api/categorias",
               "protocol": "http",
@@ -110,15 +247,54 @@
       "name": "Productos",
       "item": [
         {
-          "name": "Listar todos",
+          "name": "listarTodos",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/productos?",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
           },
           "response": []
         },
         {
-          "name": "Crear Producto",
+          "name": "consultarProductoPorID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/productos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "productos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearProducto1",
           "request": {
             "method": "POST",
             "header": [],
@@ -147,13 +323,42 @@
           "response": []
         },
         {
-          "name": "Actualizar Producto",
+          "name": "crearProducto2",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Camiseta de HULK\",\r\n  \"descripcion\": \"Camiseta de HULK en fondo negro\",\r\n  \"personaje\": \"HULK\",\r\n  \"precio\": 19.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "productos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "actualizarProducto",
           "request": {
             "method": "PUT",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América V2\",\r\n  \"descripcion\": \"Edición especial con asas reforzadas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 17.50,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 1\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América V2\",\r\n  \"descripcion\": \"Edición especial con asas reforzadas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 17.50,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 2\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -177,13 +382,13 @@
           "response": []
         },
         {
-          "name": "Desactivar Producto",
+          "name": "desactivarProducto",
           "request": {
             "method": "PATCH",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América V2\",\r\n  \"descripcion\": \"Edición especial con asas reforzadas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 17.50,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 1\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América V2\",\r\n  \"descripcion\": \"Edición especial con asas reforzadas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 17.50,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 2\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -206,6 +411,37 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "reactivarProducto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América V2\",\r\n  \"descripcion\": \"Edición especial con asas reforzadas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 17.50,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/productos/1/reactivar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "productos",
+                "1",
+                "reactivar"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -213,7 +449,7 @@
       "name": "Pedidos",
       "item": [
         {
-          "name": "Crear Pedido",
+          "name": "crearPedido",
           "request": {
             "method": "POST",
             "header": [],
@@ -242,7 +478,7 @@
           "response": []
         },
         {
-          "name": "Añadir productos al pedido",
+          "name": "añadirProductosAlPedido",
           "request": {
             "method": "POST",
             "header": [],
@@ -273,10 +509,19 @@
           "response": []
         },
         {
-          "name": "Cambiar estado pedido",
+          "name": "cambiarEstadoConfirmacionDePago",
           "request": {
             "method": "PATCH",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"CONFIRMACION_DE_PAGO\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "http://localhost:8080/api/pedidos/1/estado",
               "protocol": "http",
@@ -295,7 +540,224 @@
           "response": []
         },
         {
-          "name": "Eliminar producto del pedido",
+          "name": "cambiarEstadoCreado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"CREADO\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoPagoAceptado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"PAGO_ACEPTADO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoEnPreparacion",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"EN_PREPARACION\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoPedidoListo",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"PEDIDO_LISTO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoEntregado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"ENTREGADO\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoEnviado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"ENVIADO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cambiarEstadoCancelado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoPedido\": \"CANCELADO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "eliminarProductoDelPedido",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -318,7 +780,7 @@
           "response": []
         },
         {
-          "name": "Consultar pedido por código",
+          "name": "consultarPedidoPorCodigo",
           "request": {
             "method": "GET",
             "header": [],
@@ -340,12 +802,12 @@
           "response": []
         },
         {
-          "name": "Listar pedidos",
+          "name": "listarPedidos",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/pedidos?estado=CREADO",
+              "raw": "http://localhost:8080/api/pedidos",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -358,7 +820,8 @@
               "query": [
                 {
                   "key": "estado",
-                  "value": "CREADO"
+                  "value": "CREADO",
+                  "disabled": true
                 },
                 {
                   "key": "estado",
@@ -408,7 +871,7 @@
           "response": []
         },
         {
-          "name": "Listar pedidos para pantalla de comandas",
+          "name": "listarPedidosParaPantallaDeComandas",
           "request": {
             "method": "GET",
             "header": [],
