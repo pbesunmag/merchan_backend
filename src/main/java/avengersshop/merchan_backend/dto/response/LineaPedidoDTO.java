@@ -14,26 +14,19 @@ public class LineaPedidoDTO {
 
     private Long id;
     private Long productoId;
-    private String nombreProducto;
-    private Integer cantidad;
+    private String productoNombre;
     private BigDecimal precioUnitario;
-    private BigDecimal subtotal;
+    private Integer cantidad;
     private String textoPersonalizado;
 
-    public static LineaPedidoDTO fromEntity(PedidoProducto linea) {
-        if (linea == null) return null;
-
-        // Calculamos el subtotal multiplicando precio unitario por cantidad
-        BigDecimal subtotal = linea.getPrecioUnitario().multiply(BigDecimal.valueOf(linea.getCantidad()));
-
+    public static LineaPedidoDTO fromEntity(PedidoProducto pp) {
         return new LineaPedidoDTO(
-                linea.getId(),
-                linea.getProducto() != null ? linea.getProducto().getId() : null,
-                linea.getProducto() != null ? linea.getProducto().getNombre() : null,
-                linea.getCantidad(),
-                linea.getPrecioUnitario(),
-                subtotal,
-                linea.getTextoPersonalizado()
+                pp.getId(),
+                pp.getProducto() != null ? pp.getProducto().getId() : null,
+                pp.getProducto() != null ? pp.getProducto().getNombre() : null,
+                pp.getPrecioUnitario(),
+                pp.getCantidad(),
+                pp.getTextoPersonalizado()
         );
     }
 }

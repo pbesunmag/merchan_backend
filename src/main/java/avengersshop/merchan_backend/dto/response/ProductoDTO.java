@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -16,14 +17,14 @@ public class ProductoDTO {
     private String nombre;
     private String descripcion;
     private String personaje;
-    private BigDecimal precio;
-    private String personalizable; // "Sí" / "No"
-    private boolean activo;
+    private BigDecimal precio; // 👈 Coincide con BigDecimal de Producto.java
+    private String personalizable;
+    private Boolean activo;
     private String nombreCategoria;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
     public static ProductoDTO fromEntity(Producto producto) {
-        if (producto == null) return null;
-
         return new ProductoDTO(
                 producto.getId(),
                 producto.getNombre(),
@@ -32,7 +33,9 @@ public class ProductoDTO {
                 producto.getPrecio(),
                 producto.isPersonalizable() ? "Sí" : "No",
                 producto.isActivo(),
-                producto.getCategoria() != null ? producto.getCategoria().getNombre() : null
+                producto.getCategoria() != null ? producto.getCategoria().getNombre() : null,
+                producto.getFechaCreacion(),
+                producto.getFechaActualizacion()
         );
     }
 }

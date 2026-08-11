@@ -1,6 +1,8 @@
 package avengersshop.merchan_backend.repositories;
 
 import avengersshop.merchan_backend.models.Producto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,9 +17,9 @@ public interface IProductoRepository extends JpaRepository<Producto, Long> {
     @Query("SELECT p FROM Producto p WHERE " +
             "(:activo IS NULL OR p.activo = :activo) AND " +
             "(:categoriaId IS NULL OR p.categoria.id = :categoriaId)")
-    List<Producto> buscarConFiltros(@Param("activo") Boolean activo,
+    Page<Producto> buscarConFiltros(@Param("activo") Boolean activo,
                                     @Param("categoriaId") Long categoriaId,
-                                    Sort sort);
+                                    Pageable pageable);
 
     boolean existsByNombreIgnoreCase(String nombre);
 }

@@ -1,21 +1,23 @@
 package avengersshop.merchan_backend.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "pedidos")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "pedidos")
 public class Pedido {
 
     @Id
@@ -23,30 +25,26 @@ public class Pedido {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String codigo; // Ej: "AV-1001"
+    private String codigo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoPedido estado = EstadoPedido.CREADO;
-
-    @Column(nullable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private EstadoPedido estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "terminal_id", nullable = false)
     private Terminal terminal;
 
+    // Relación corregida apuntando a PedidoProducto
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PedidoProducto> lineas = new ArrayList<>();
+    private List<PedidoProducto> productos = new ArrayList<>();
 
-    // Métodos helper para mantener ambos lados de la relación sincronizados
-    public void agregarLinea(PedidoProducto linea) {
-        lineas.add(linea);
-        linea.setPedido(this);
-    }
+    // Auditoría automática
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
 
-    public void removerLinea(PedidoProducto linea) {
-        lineas.remove(linea);
-        linea.setPedido(null);
-    }
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime fechaActualizacion;
 }

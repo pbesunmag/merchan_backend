@@ -8,11 +8,10 @@ import avengersshop.merchan_backend.models.Categoria;
 import avengersshop.merchan_backend.models.Producto;
 import avengersshop.merchan_backend.repositories.ICategoriaRepository;
 import avengersshop.merchan_backend.repositories.IProductoRepository;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -27,15 +26,9 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, String ordenacion, String tipoOrdenacion) {
-        Sort sort = Sort.unsorted();
-        if ("precio".equalsIgnoreCase(ordenacion)) {
-            Sort.Direction direccion = "DESC".equalsIgnoreCase(tipoOrdenacion) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sort = Sort.by(direccion, "precio");
-        }
-
-        List<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, sort);
-        return productos.stream().map(ProductoDTO::fromEntity).toList();
+    public Page<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, Pageable pageable) {
+        Page<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, pageable);
+        return productos.map(ProductoDTO::fromEntity);
     }
 
     @Transactional(readOnly = true)

@@ -4,13 +4,19 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "productos")
 
 public class Producto {
@@ -39,5 +45,11 @@ public class Producto {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false, name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
 
+    @LastModifiedDate
+    @Column(nullable = false, name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
 }

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -20,31 +19,35 @@ public class PedidoDTO {
     private String codigo;
     private EstadoPedido estado;
     private LocalDateTime fechaCreacion;
-    private String nombreTerminal;
-    private List<LineaPedidoDTO> lineas = new ArrayList<>();
-    private BigDecimal importeTotal;
+    private LocalDateTime fechaActualizacion;
+    private String terminalNombre;
+    private BigDecimal total;
+    private List<LineaPedidoDTO> lineas;
 
     public static PedidoDTO fromEntity(Pedido pedido) {
-        if (pedido == null) return null;
+        List<LineaPedidoDTO> lineasDTO = pedido.getProductos() != null
+                ? pedido.getProductos().stream()
+                .map(LineaPedidoDTO::fromEntity)
+                .toList()
+                : List.of();
 
-        // Convertimos la lista de entidades PedidoProducto a LineaPedidoDTO usando Streams
-        List<LineaPedidoDTO> lineasDTO = (pedido.getLineas() != null)
-                ? pedido.getLineas().stream().map(LineaPedidoDTO::fromEntity).toList()
-                : new ArrayList<>();
-
-        // Sumamos todos los subtotales de las líneas para obtener el total del pedido
-        BigDecimal total = lineasDTO.stream()
-                .map(LineaPedidoDTO::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Suma precisa del total usando BigDecimal
+        BigDecimal totalCalculado = pedido.getProductos() != null
+                ? pedido.getProductos().stream()
+                .filter(pp -> pp.getPrecioUnitario() != null && pp.getCantidad() != null)
+                .map(pp -> pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                : BigDecimal.ZERO;
 
         return new PedidoDTO(
                 pedido.getId(),
                 pedido.getCodigo(),
                 pedido.getEstado(),
                 pedido.getFechaCreacion(),
+                pedido.getFechaActualizacion(),
                 pedido.getTerminal() != null ? pedido.getTerminal().getNombre() : null,
-                lineasDTO,
-                total
+                totalCalculado,
+                lineasDTO
         );
     }
 }
