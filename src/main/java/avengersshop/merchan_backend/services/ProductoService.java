@@ -28,22 +28,24 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, String ordenacion, String tipoOrdenacion) {
-
-        // Configuración de la ordenación
         Sort sort = Sort.unsorted();
         if ("precio".equalsIgnoreCase(ordenacion)) {
             Sort.Direction direccion = "DESC".equalsIgnoreCase(tipoOrdenacion) ? Sort.Direction.DESC : Sort.Direction.ASC;
             sort = Sort.by(direccion, "precio");
         }
 
-        // Delegamos todo el filtrado condicional a una sola llamada
         List<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, sort);
-
         return productos.stream().map(ProductoDTO::fromEntity).toList();
     }
 
+    @Transactional(readOnly = true)
+    public ProductoDTO obtenerPorId(Long id) {
+        Producto producto = iProductoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+        return ProductoDTO.fromEntity(producto);
+    }
+
     public ProductoDTO crearProducto(CrearProductoDTO crearProductoDto) {
-        // Validación de duplicados por nombre
         if (iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
             throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
         }
@@ -68,7 +70,6 @@ public class ProductoService {
     }
 
     public ProductoDTO actualizarProducto(Long id, CrearProductoDTO crearProductoDto) {
-
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
@@ -97,6 +98,16 @@ public class ProductoService {
 
         Producto productoDesactivado = iProductoRepository.save(producto);
         return ProductoDTO.fromEntity(productoDesactivado);
+    }
+
+    public ProductoDTO reactivarProducto(Long id) {
+        Producto producto = iProductoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+
+        producto.setActivo(true);
+
+        Producto productoReactivado = iProductoRepository.save(producto);
+        return ProductoDTO.fromEntity(productoReactivado);
     }
 
     private boolean parsearEsPersonalizable(String texto) {

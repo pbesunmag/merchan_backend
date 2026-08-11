@@ -21,17 +21,18 @@ public class CategoriaController {
         this.categoriaService = categoriaService;
     }
 
-    //Obtenemos todas las categorías
     @GetMapping
     public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
         return ResponseEntity.status(HttpStatus.OK).body(categoriaService.listarCategorias());
     }
 
-    //Creamos nueva categoría
-    // El PAYLOAD es el JSON que viene en el cuerpo de la petición HTTP (con nombre y descripción).
-    // La anotación @RequestBody lo recibe y convierte en el objeto CrearCategoriaDTO.
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoriaDTO> obtenerCategoriaPorId(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(categoriaService.obtenerPorId(id));
+    }
+
     @PostMapping
-    public ResponseEntity<CategoriaDTO> crearCategoria(@Valid @RequestBody CrearCategoriaDTO categoriaDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crearCategoria(categoriaDTO));
+    public ResponseEntity<CategoriaDTO> crearCategoria(@Valid @RequestBody CrearCategoriaDTO crearCategoriaDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crearCategoria(crearCategoriaDTO));
     }
 }

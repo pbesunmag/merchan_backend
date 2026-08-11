@@ -3,6 +3,7 @@ package avengersshop.merchan_backend.services;
 import avengersshop.merchan_backend.dto.request.CrearCategoriaDTO;
 import avengersshop.merchan_backend.dto.response.CategoriaDTO;
 import avengersshop.merchan_backend.exceptions.BadRequestException;
+import avengersshop.merchan_backend.exceptions.ResourceNotFoundException;
 import avengersshop.merchan_backend.models.Categoria;
 import avengersshop.merchan_backend.repositories.ICategoriaRepository;
 import org.springframework.stereotype.Service;
@@ -23,20 +24,27 @@ public class CategoriaService {
     @Transactional(readOnly = true)
     public List<CategoriaDTO> listarCategorias() {
         return iCategoriaRepository.findAll().stream()
-                .map(CategoriaDTO::fromEntity).toList();
+                .map(CategoriaDTO::fromEntity)
+                .toList();
     }
 
-    public CategoriaDTO crearCategoria(CrearCategoriaDTO categoriaDto) {
-        // Validación de duplicados
-        if (iCategoriaRepository.existsByNombreIgnoreCase(categoriaDto.getNombre())) {
-            throw new BadRequestException("Ya existe una categoría con el nombre: " + categoriaDto.getNombre());
+    @Transactional(readOnly = true)
+    public CategoriaDTO obtenerPorId(Long id) {
+        Categoria categoria = iCategoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
+        return CategoriaDTO.fromEntity(categoria);
+    }
+
+    public CategoriaDTO crearCategoria(CrearCategoriaDTO crearCategoriaDTO) {
+        if (iCategoriaRepository.existsByNombreIgnoreCase(crearCategoriaDTO.getNombre())) {
+            throw new BadRequestException("Ya existe una categoría con el nombre: " + crearCategoriaDTO.getNombre());
         }
 
         Categoria categoria = new Categoria();
-        categoria.setNombre(categoriaDto.getNombre());
-        categoria.setDescripcion(categoriaDto.getDescripcion() != null ? categoriaDto.getDescripcion() : "");
+        categoria.setNombre(crearCategoriaDTO.getNombre());
+        categoria.setDescripcion(crearCategoriaDTO.getDescripcion());
 
-        Categoria categoriaGuardada = iCategoriaRepository.save(categoria);
-        return CategoriaDTO.fromEntity(categoriaGuardada);
+        Categoria guardada = iCategoriaRepository.save(categoria);
+        return CategoriaDTO.fromEntity(guardada);
     }
 }

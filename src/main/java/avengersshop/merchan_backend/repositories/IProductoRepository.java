@@ -12,7 +12,6 @@ import java.util.List;
 @Repository
 public interface IProductoRepository extends JpaRepository<Producto, Long> {
 
-    // Consulta JPQL condicional: Si un parámetro es null, MySQL lo ignora automáticamente
     @Query("SELECT p FROM Producto p WHERE " +
             "(:activo IS NULL OR p.activo = :activo) AND " +
             "(:categoriaId IS NULL OR p.categoria.id = :categoriaId)")

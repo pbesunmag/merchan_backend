@@ -12,19 +12,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*") // Permite peticiones desde el frontend
+@CrossOrigin(origins = "*")
 public class ProductoController {
+
     private final ProductoService productoService;
 
     public ProductoController(ProductoService productoService) {
         this.productoService = productoService;
     }
 
-    //Listar productos con filtros
-    // Ejemplo de llamadas en Postman:
-    // GET /api/productos
-    // GET /api/productos?activos=true
-    // GET /api/productos?idCategoria=1&ordenacion=precio&tipoOrdenacion=DESC
+    // GET /api/productos (Permite listar todos o filtrar por idCategoria, activos, ordenacion)
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> listarProductos(
             @RequestParam(required = false) Boolean activos,
@@ -32,16 +29,24 @@ public class ProductoController {
             @RequestParam(required = false) String ordenacion,
             @RequestParam(required = false) String tipoOrdenacion
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(productoService.listarProductos(activos, idCategoria, ordenacion, tipoOrdenacion));
+        return ResponseEntity.status(HttpStatus.OK).body(
+                productoService.listarProductos(activos, idCategoria, ordenacion, tipoOrdenacion)
+        );
     }
 
-    //Creamos nuevo producto
+    // GET /api/productos/{id} (Consulta un producto por su ID)
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductoDTO> obtenerProductoPorId(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.obtenerPorId(id));
+    }
+
+    // POST /api/productos (Crea un nuevo producto)
     @PostMapping
     public ResponseEntity<ProductoDTO> crearProducto(@Valid @RequestBody CrearProductoDTO crearProductoDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crearProducto(crearProductoDto));
     }
 
-    //Actualizamos un producto existente
+    // PUT /api/productos/{id} (Actualiza un producto)
     @PutMapping("/{id}")
     public ResponseEntity<ProductoDTO> actualizarProducto(
             @PathVariable Long id,
@@ -50,9 +55,15 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.actualizarProducto(id, crearProductoDto));
     }
 
-    //Desactivamos producto
+    // PATCH /api/productos/{id}/desactivar (Desactiva un producto)
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ProductoDTO> desactivarProducto(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.desactivarProducto(id));
+    }
+
+    // PATCH /api/productos/{id}/reactivar (Reactiva un producto)
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<ProductoDTO> reactivarProducto(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.reactivarProducto(id));
     }
 }

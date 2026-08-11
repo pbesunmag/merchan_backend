@@ -1,16 +1,18 @@
 package avengersshop.merchan_backend.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "categorias")
-
+@Getter
+@Setter
+@NoArgsConstructor
 public class Categoria {
 
     @Id
@@ -20,6 +22,8 @@ public class Categoria {
     @Column(nullable = false, unique = true)
     private String nombre;
 
-    @Column(nullable = false)
     private String descripcion;
+
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL)
+    private List<Producto> productos = new ArrayList<>();
 }

@@ -157,4 +157,9 @@ public class PedidoService {
         return iPedidoRepository.findAllByOrderByFechaCreacionAsc().stream()
                 .map(PedidoPantallaDTO::fromEntity).toList();
     }
+
+    public Void eliminarPedido(Long pedidoId) {
+        iPedidoRepository.deleteById(pedidoId);
+        return null;
+    }
 }
