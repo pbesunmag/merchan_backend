@@ -21,7 +21,7 @@ public class PedidoDTO {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
     private String terminalNombre;
-    private BigDecimal total;
+    private BigDecimal total; // Importe total calculado acumulando las líneas del pedido
     private List<LineaPedidoDTO> lineas;
 
     public static PedidoDTO fromEntity(Pedido pedido) {
@@ -45,6 +45,7 @@ public class PedidoDTO {
                 pedido.getEstado(),
                 pedido.getFechaCreacion(),
                 pedido.getFechaActualizacion(),
+                // Extrae el nombre de la terminal evitando lanzamientos de NullPointerException
                 pedido.getTerminal() != null ? pedido.getTerminal().getNombre() : null,
                 totalCalculado,
                 lineasDTO

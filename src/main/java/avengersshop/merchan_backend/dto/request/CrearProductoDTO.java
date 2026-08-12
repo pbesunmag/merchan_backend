@@ -19,15 +19,18 @@ public class CrearProductoDTO {
 
     private String descripcion;
 
-    private String personaje; // Ej: "Iron Man", "Spider-Man", "Thanos"
+    // Atributo temático específico del dominio de la tienda (Ej: "Iron Man", "Spider-Man")
+    private String personaje;
 
     @NotNull(message = "El precio es obligatorio")
     @Positive(message = "El precio debe ser un número positivo")
+    // Se usa BigDecimal para evitar errores de precisión en operaciones financieras
     private BigDecimal precio;
 
-    // Aceptamos "Sí" / "No" desde Postman como acordamos
+    // Inicialización por defecto en "No" para manejar peticiones donde no se envíe la propiedad
     private String personalizable = "No";
 
+    // Solo pide el ID de la categoría para saber a cuál pertenece el producto
     @NotNull(message = "Debe asignar el ID de una categoría existente")
     private Long categoriaId;
 }

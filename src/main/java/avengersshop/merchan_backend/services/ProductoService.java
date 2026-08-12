@@ -25,12 +25,14 @@ public class ProductoService {
         this.iCategoriaRepository = iCategoriaRepository;
     }
 
+    // Devuelve el catálogo de productos paginado, filtrando opcionalmente por categoría y estado de disponibilidad.
     @Transactional(readOnly = true)
     public Page<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, Pageable pageable) {
         Page<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, pageable);
         return productos.map(ProductoDTO::fromEntity);
     }
 
+    // Busca un artículo por su ID para ver su detalle o lanza error si no existe.
     @Transactional(readOnly = true)
     public ProductoDTO obtenerPorId(Long id) {
         Producto producto = iProductoRepository.findById(id)
@@ -38,6 +40,7 @@ public class ProductoService {
         return ProductoDTO.fromEntity(producto);
     }
 
+    // Valida que el nombre no esté duplicado, asigna la categoría y crea un nuevo artículo en la tienda.
     public ProductoDTO crearProducto(CrearProductoDTO crearProductoDto) {
         if (iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
             throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
@@ -62,9 +65,16 @@ public class ProductoService {
         return ProductoDTO.fromEntity(productoGuardado);
     }
 
+    // Modifica los datos de un producto existente (precio, descripción, personalización) y actualiza su categoría.
     public ProductoDTO actualizarProducto(Long id, CrearProductoDTO crearProductoDto) {
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+
+        // Valida que, si cambia el nombre, este no exista ya en otro producto diferente
+        if (!producto.getNombre().equalsIgnoreCase(crearProductoDto.getNombre())
+                && iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
+            throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
+        }
 
         Categoria categoria = iCategoriaRepository.findById(crearProductoDto.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + crearProductoDto.getCategoriaId()));
@@ -83,6 +93,7 @@ public class ProductoService {
         return ProductoDTO.fromEntity(productoActualizado);
     }
 
+    // Aplica borrado lógico deshabilitando el producto sin eliminar su historial de ventas.
     public ProductoDTO desactivarProducto(Long id) {
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
@@ -93,6 +104,7 @@ public class ProductoService {
         return ProductoDTO.fromEntity(productoDesactivado);
     }
 
+    // Vuelve a habilitar un producto descatalogado para que esté disponible nuevamente en el catálogo.
     public ProductoDTO reactivarProducto(Long id) {
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
@@ -103,6 +115,7 @@ public class ProductoService {
         return ProductoDTO.fromEntity(productoReactivado);
     }
 
+    // Convierte el texto enviado desde el formulario ("Sí"/"Si") al valor booleano de personalización.
     private boolean parsearEsPersonalizable(String texto) {
         return texto != null && (texto.equalsIgnoreCase("Sí") || texto.equalsIgnoreCase("Si"));
     }

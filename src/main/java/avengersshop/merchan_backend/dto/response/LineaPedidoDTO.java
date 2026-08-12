@@ -15,7 +15,7 @@ public class LineaPedidoDTO {
     private Long id;
     private Long productoId;
     private String productoNombre;
-    private BigDecimal precioUnitario;
+    private BigDecimal precioUnitario; // Uso de BigDecimal para mantener precisión monetaria
     private Integer cantidad;
     private String textoPersonalizado;
 

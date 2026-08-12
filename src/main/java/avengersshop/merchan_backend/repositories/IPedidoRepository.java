@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface IPedidoRepository extends JpaRepository<Pedido, Long> {
 
-    // Buscamos un pedido específico por su código único
+    // Busca un pedido por su código único de seguimiento.
     Optional<Pedido> findByCodigo(String codigo);
 
     // Consulta unificada con filtro opcional por estado y soporte de paginación/ordenación
@@ -24,9 +24,9 @@ public interface IPedidoRepository extends JpaRepository<Pedido, Long> {
 
     // --- Métodos sin paginar (útiles para pantallas o listados fijos) ---
 
-    // Listamos todos los pedidos por fecha ascendente
+    // Obtiene los pedidos ordenados desde el más antiguo
     List<Pedido> findAllByOrderByFechaCreacionAsc();
 
-    // Listamos pedidos filtrados por estado y ordenados por fecha ascendente
+    // Lista los pedidos de un estado en particular ordenados por antigüedad.
     List<Pedido> findByEstadoOrderByFechaCreacionAsc(EstadoPedido estado);
 }

@@ -14,7 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "pedidos")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners(AuditingEntityListener.class) // Activa la auditoría automática para campos de fecha
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,20 +31,20 @@ public class Pedido {
     @Column(nullable = false)
     private EstadoPedido estado;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY para optimizar rendimiento evitando consultas innecesarias a la tabla de terminales.
     @JoinColumn(name = "terminal_id", nullable = false)
     private Terminal terminal;
 
-    // Relación corregida apuntando a PedidoProducto
+    // Líneas de detalle con los productos comprados en este pedido.
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PedidoProducto> productos = new ArrayList<>();
 
-    // Auditoría automática
+    // Marca de tiempo de cuando se registró la compra.
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(nullable = false) // Se actualiza automáticamente en cada modificación del registro
     private LocalDateTime fechaActualizacion;
 }

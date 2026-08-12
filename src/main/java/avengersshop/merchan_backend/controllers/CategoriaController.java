@@ -16,8 +16,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
-@CrossOrigin(origins = "*")
-@Tag(name = "🏷️ Categorías", description = "Endpoints para la gestión de categorías del catálogo")
+@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@Tag(name = "🏷️ Categorías", description = "Endpoints para la gestión de categorías del catálogo") // Categorización en Swagger UI
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
@@ -26,10 +26,12 @@ public class CategoriaController {
         this.categoriaService = categoriaService;
     }
 
+    // Documentación OpenAPI/Swagger: define el título y la descripción funcional del endpoint en la interfaz interactiva
     @Operation(
             summary = "Listar todas las categorías",
             description = "Devuelve el listado completo de categorías con la lista de sus productos anidados."
     )
+    // Define los códigos de estado HTTP que puede retornar este endpoint para la documentación de Swagger
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de categorías obtenida con éxito")
     })
