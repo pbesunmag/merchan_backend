@@ -1,9 +1,7 @@
 package avengersshop.merchan_backend.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -12,12 +10,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class) // Activa la auditoría automática de fechas manejada por Spring Data JPA
 @Table(name = "productos")
+//Con @Getter y @Setter en lugar de poner @Data evitamos carga no deseada y ciclos infinitos
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class Producto {
     @Id
