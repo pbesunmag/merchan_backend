@@ -70,6 +70,12 @@ public class ProductoService {
         Producto producto = iProductoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
+        // Valida que, si cambia el nombre, este no exista ya en otro producto diferente
+        if (!producto.getNombre().equalsIgnoreCase(crearProductoDto.getNombre())
+                && iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
+            throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
+        }
+
         Categoria categoria = iCategoriaRepository.findById(crearProductoDto.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + crearProductoDto.getCategoriaId()));
 

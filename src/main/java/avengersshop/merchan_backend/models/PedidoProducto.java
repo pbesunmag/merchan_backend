@@ -1,16 +1,18 @@
 package avengersshop.merchan_backend.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Entity
 @Table(name = "pedido_producto")
+//Con @Getter y @Setter en lugar de poner @Data evitamos carga no deseada y ciclos infinitos
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PedidoProducto {
 
     @Id
