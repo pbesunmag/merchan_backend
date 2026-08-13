@@ -28,6 +28,7 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
+    // Obtiene la lista de productos paginada con filtros opcionales por estado activo o categoría.
     // Documentación Swagger de búsqueda paginada con filtros opcionales
     @Operation(
             summary = "Listar productos paginados",
@@ -48,6 +49,7 @@ public class ProductoController {
         );
     }
 
+    // Obtiene los detalles completos de un producto específico según su ID.
     @Operation(summary = "Obtener producto por ID", description = "Devuelve los detalles de un producto específico.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Producto encontrado"),
@@ -58,6 +60,7 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.obtenerPorId(id));
     }
 
+    // Registra un nuevo producto en el catálogo.
     @Operation(summary = "Crear un nuevo producto", description = "Registra un producto en el catálogo previa validación de datos.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Producto creado con éxito"),
@@ -70,6 +73,7 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crearProducto(crearProductoDto));
     }
 
+    // Modifica la información general de un producto existente.
     @Operation(summary = "Actualizar producto", description = "Modifica los datos de un producto existente por su ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Producto actualizado correctamente"),
@@ -83,6 +87,7 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.actualizarProducto(id, crearProductoDto));
     }
 
+    // Aplica borrado lógico desactivando un producto para ocultarlo del catálogo activo.
     @Operation(summary = "Desactivar producto", description = "Realiza un borrado lógico desactivando el producto.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Producto desactivado correctamente"),
@@ -93,6 +98,7 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.desactivarProducto(id));
     }
 
+    // Vuelve a habilitar un producto inactivo para que esté disponible en la tienda.
     @Operation(summary = "Reactivar producto", description = "Reactiva un producto previamente desactivado.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Producto reactivado correctamente"),

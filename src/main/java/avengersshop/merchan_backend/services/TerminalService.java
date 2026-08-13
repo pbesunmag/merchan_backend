@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático
 public class TerminalService {
 
     private final ITerminalRepository iTerminalRepository;
@@ -21,6 +21,7 @@ public class TerminalService {
     }
 
     // Obtiene todos los puntos de venta registrados en la tienda para su selección en caja.
+    // Consulta de solo lectura: mejora el rendimiento al no realizar cambios en la base de datos
     @Transactional(readOnly = true)
     public List<TerminalDTO> listarTerminales() {
         return iTerminalRepository.findAll().stream()
@@ -30,6 +31,7 @@ public class TerminalService {
 
     // Registra una nueva caja o punto de venta tras comprobar que el nombre no esté repetido.
     public TerminalDTO crearTerminal(CrearTerminalDTO terminalDto) {
+        // Regla de negocio: evita duplicados de terminales por nombre (ignora mayúsculas/minúsculas)
         if (iTerminalRepository.existsByNombreIgnoreCase(terminalDto.getNombre())) {
             throw new BadRequestException("Ya existe una terminal con el nombre: " + terminalDto.getNombre());
         }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @EntityListeners(AuditingEntityListener.class) // Activa la auditoría automática de fechas manejada por Spring Data JPA
 @Table(name = "productos")
-//Con @Getter y @Setter en lugar de poner @Data evitamos carga no deseada y ciclos infinitos
+// Se utilizan @Getter y @Setter en lugar de @Data para evitar consultas no deseadas y ciclos infinitos en relaciones JPA
 @Getter
 @Setter
 @AllArgsConstructor
@@ -40,7 +40,7 @@ public class Producto {
     @Column(nullable = false, name = "personalizable")
     private boolean personalizable = false;
 
-    // Permite desactivar productos descatalogados sin romper la integridad referencia de los pedidos históricos donde este producto fue vendido.
+    // Permite desactivar productos descatalogados sin romper la integridad referencial de los pedidos históricos donde este producto fue vendido.
     @Column(nullable = false, name = "activo")
     private boolean activo = true;
 

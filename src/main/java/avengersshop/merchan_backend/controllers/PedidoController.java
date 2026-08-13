@@ -35,6 +35,7 @@ public class PedidoController {
     }
 
     // Documentación OpenAPI/Swagger para la consulta paginada
+    // Lista pedidos paginados con opción de filtrado opcional por estado.
     @Operation(
             summary = "Listar pedidos paginados",
             description = "Obtiene los pedidos paginados con opción de filtrado por estado y ordenación cronológica."
@@ -55,6 +56,7 @@ public class PedidoController {
         );
     }
 
+    // Obtener la información detallada de un pedido mediante su código único.
     @Operation(
             summary = "Obtener pedido por código",
             description = "Consulta los detalles completos de un pedido a través de su código único asignado."
@@ -70,6 +72,7 @@ public class PedidoController {
         );
     }
 
+    // Optimización para la pantalla pública de visualización de comandas del local.
     @Operation(
             summary = "Vista simplificada para pantalla",
             description = "Devuelve el listado ligero de comandas diseñado para renderizarse en las pantallas del local."
@@ -85,6 +88,7 @@ public class PedidoController {
         );
     }
 
+    // Crea un nuevo pedido vacío asociado a una terminal.
     @Operation(
             summary = "Crear nuevo pedido",
             description = "Inicia una nueva comanda vacía desde una terminal específica."
@@ -98,6 +102,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoService.crearPedido(crearPedidoDTO));
     }
 
+    // Añadir o incrementar productos en un pedido activo.
     @Operation(
             summary = "Añadir producto al pedido",
             description = "Agrega o incrementa un producto con su opción de personalización en un pedido en estado CREADO."
@@ -115,6 +120,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.OK).body(pedidoService.agregarProductoAPedido(pedidoId, agregarProductoPedidoDTO));
     }
 
+    // Eliminar un producto o línea completa del pedido.
     @Operation(
             summary = "Eliminar producto del pedido",
             description = "Retira un producto de la comanda mientras esté en estado CREADO."
@@ -132,6 +138,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.OK).body(pedidoService.eliminarProductoDePedido(pedidoId, productoId));
     }
 
+    // Actualizar el estado del pedido en la cadena de montaje/entrega.
     @Operation(
             summary = "Cambiar estado del pedido",
             description = "Actualiza la fase del pedido (CREADO, EN_PREPARACION, LISTO, ENTREGADO)."

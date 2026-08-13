@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "pedido_producto")
-//Con @Getter y @Setter en lugar de poner @Data evitamos carga no deseada y ciclos infinitos
+// Se utilizan @Getter y @Setter en lugar de @Data para evitar consultas no deseadas y ciclos infinitos en relaciones JPA
 @Getter
 @Setter
 @NoArgsConstructor

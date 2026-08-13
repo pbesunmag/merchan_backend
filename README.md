@@ -27,7 +27,7 @@ Este proyecto nace como el motor backend para una tienda online y sistema de ges
 * **Java 21**
 * **Spring Boot 3.x** 🍃
 * **Spring Data JPA / Hibernate**
-* **MySQL** 🐬
+* **MySQL 8.0+** 🐬
 * **Jakarta Validation**
 * **Lombok**
 * **Swagger UI / Springdoc OpenAPI**
@@ -59,8 +59,8 @@ src/main/java/avengersshop/merchan_backend/
 
 1. `Terminal`: Representa los puntos de venta autorizados que emiten pedidos.
 2. `Categoria`: Agrupación lógica de productos. Sus respuestas DTO incluyen la lista anidada de productos pertenecientes a ella.
-3. `Producto`: Artículos del catálogo. Soportan personalización mediante texto libre y borrado lógico.
-4. `Pedido`: Registra la comanda, terminal de origen, código único autogenerado y el estado en el flujo de trabajo (`EstadoPedido`).
+3. `Producto`: Artículos del catálogo. Soportan personalización mediante texto libre, control de disponibilidad y borrado lógico (`activo`).
+4. `Pedido`: Registra la comanda asociada a un terminal de origen, código único autogenerado y el estado en el flujo de trabajo (`EstadoPedido`).
 5. `PedidoProducto`: Entidad intermedia que gestiona la relación muchos-a-muchos entre Pedido y Producto, congelando el `precioUnitario` al momento de la compra.
 
 ---
@@ -99,12 +99,20 @@ SPRING_DATASOURCE_PASSWORD=tu_contraseña_de_mysql
 
 4. **Compilar y arrancar la aplicación:**
 
-*Bash*
+*En Linux/macOS:*
+
+**Bash**
 ```text
 ./mvnw spring-boot:run
 ```
 
-(En *Windows* puedes usar `mvnw.cmd spring-boot:run` o ejecutar la clase principal `MerchanBackendApplication.java` directamente desde tu IDE).
+*En Windows:* 
+
+**DOS**
+```text
+mvnw.cmd spring-boot:run
+```
+(También puedes ejecutar la clase principal `MerchanBackendApplication.java`directamente desde *IntelliJ IDEA*)
 
 ---
 
@@ -125,7 +133,7 @@ Asegúrate de que las credenciales coincidan con las de tu usuario local de MySQ
 
 * 🌐 **Swagger UI:** Una vez arrancada la aplicación, puedes probar de forma interactiva y visual todos los endpoints accediendo a:  
   👉 `http://localhost:8080/doc/swagger-ui.html
-* 📬 **Colección Postman:** En la raíz del proyecto se incluye el archivo de colección para Postman listo para importar.
+* 📬 **Colección Postman:** En la raíz del proyecto se incluye el archivo JSON con la colección de Postman lista para importar.
 
 ---
 
@@ -134,7 +142,7 @@ Asegúrate de que las credenciales coincidan con las de tu usuario local de MySQ
 El servidor se iniciará por defecto en `http://localhost:8080`
 
 ### 🖥️ Terminales (`/api/terminales`)
-* `GET /api/terminales` - Listar terminales de venta.
+* `GET /api/terminales` - Listar todas las terminales de venta.
 * `POST /api/terminales` - Crear nueva terminal de venta.
 
 ### 🏷️ Categorías (`/api/categorias`)
@@ -145,7 +153,7 @@ El servidor se iniciará por defecto en `http://localhost:8080`
 ### 📦 Productos (`/api/productos`)
 * `GET /api/productos` - Listar productos paginados (admite `page`, `size`, `sort`, filtro opcional por `idCategoria` y por estado `activos`).
 * `GET /api/productos/{id}` - Obtener los detalles de un producto específico por su ID.
-* `POST /api/productos` - Crear nuevo producto.
+* `POST /api/productos` - Crear nuevo producto en el catálogo.
 * `PUT /api/productos/{id}` - Actualizar un producto existente.
 * `PATCH /api/productos/{id}/desactivar` - Desactivar/borrado lógico de un producto.
 * `PATCH /api/productos/{id}/reactivar` - Reactivar un producto previamente desactivado.
@@ -153,7 +161,7 @@ El servidor se iniciará por defecto en `http://localhost:8080`
 ### 📋 Pedidos (`/api/pedidos`)
 * `POST /api/pedidos` - Iniciar un nuevo pedido desde terminal generando un código automático.
 * `POST /api/pedidos/{pedidoId}/productos` - Añadir un producto con opción de texto personalizado.
-* `DELETE /api/pedidos/{pedidoId}/productos/{productoId}` - Eliminar producto del pedido.
+* `DELETE /api/pedidos/{pedidoId}/productos/{productoId}` - Eliminar una línea de producto del pedido.
 * `PATCH /api/pedidos/{pedidoId}/estado` - Cambiar el estado del pedido en la cadena de montaje/pago.
 * `GET /api/pedidos` - Listar todos los pedidos (admite filtro por `estadoPedido`).
 * `GET /api/pedidos/codigo/{codigo}` - Consultar la información completa de un pedido mediante su código único.
@@ -165,9 +173,13 @@ El servidor se iniciará por defecto en `http://localhost:8080`
 
 La API cuenta con una capa centralizada de captura de errores (`GlobalExceptionHandler`) mediante `@RestControllerAdvice`. Las respuestas de error siguen una estructura JSON homogénea:
 
-* **HTTP 400 Bad Request:** Errores de validación en DTOs (`@Valid`), datos duplicados o parámetros mal formados.
+* **HTTP 400 Bad Request:** Errores de validación en DTOs (`@Valid`), parámetros con tipos incorrectos, JSON mal formado o peticiones que incumplen reglas de negocio.
 
 * **HTTP 404 Not Found:** Recurso no encontrado (Producto, Categoría, Pedido o Terminal inexistente).
+
+* **HTTP 405 Method Not Allowed:** Intento de consumo de un endpoint utilizando un método HTTP no permitido para dicha ruta.
+
+* **HTTP 409 Conflict:** Conflictos de estado o integridad en base de datos, como el registro de nombres duplicados o eliminación de datos con elementos asociados.
 
 * **HTTP 500 Internal Server Error:** Excepciones inesperadas no controladas.
 

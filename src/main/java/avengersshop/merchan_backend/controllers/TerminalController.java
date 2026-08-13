@@ -26,6 +26,7 @@ public class TerminalController {
         this.terminalService = terminalService;
     }
 
+    // Obtiene el listado completo de terminales de venta habilitadas.
     // Documentación Swagger de búsqueda paginada con filtros opcionales
     @Operation(
             summary = "Listar terminales",
@@ -39,6 +40,7 @@ public class TerminalController {
         return ResponseEntity.status(HttpStatus.OK).body(terminalService.listarTerminales());
     }
 
+    // Registra un nuevo punto de venta en el sistema previa validación.
     @Operation(
             summary = "Crear nueva terminal",
             description = "Registra un nuevo punto de venta en el sistema."
