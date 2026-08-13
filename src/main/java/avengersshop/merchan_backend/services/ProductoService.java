@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático
 public class ProductoService {
 
     private final IProductoRepository iProductoRepository;
@@ -26,6 +26,7 @@ public class ProductoService {
     }
 
     // Devuelve el catálogo de productos paginado, filtrando opcionalmente por categoría y estado de disponibilidad.
+    // Consulta de solo lectura: mejora el rendimiento al no realizar cambios en la base de datos
     @Transactional(readOnly = true)
     public Page<ProductoDTO> listarProductos(Boolean activos, Long idCategoria, Pageable pageable) {
         Page<Producto> productos = iProductoRepository.buscarConFiltros(activos, idCategoria, pageable);
@@ -42,6 +43,7 @@ public class ProductoService {
 
     // Valida que el nombre no esté duplicado, asigna la categoría y crea un nuevo artículo en la tienda.
     public ProductoDTO crearProducto(CrearProductoDTO crearProductoDto) {
+        // Regla de negocio: no permite productos con el mismo nombre (ignora mayúsculas/minúsculas)
         if (iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
             throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
         }
@@ -59,7 +61,7 @@ public class ProductoService {
 
         producto.setPersonalizable(esPersonalizable);
         producto.setCategoria(categoria);
-        producto.setActivo(true);
+        producto.setActivo(true); // Todo nuevo producto nace habilitado por defecto
 
         Producto productoGuardado = iProductoRepository.save(producto);
         return ProductoDTO.fromEntity(productoGuardado);

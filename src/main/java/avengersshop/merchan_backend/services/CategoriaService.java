@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático
 public class CategoriaService {
 
     private final ICategoriaRepository iCategoriaRepository;
@@ -22,6 +22,7 @@ public class CategoriaService {
     }
 
     // Obtiene todas las categorías registradas en la tienda y las convierte a DTO para la respuesta.
+    // Consulta de solo lectura: mejora el rendimiento al no realizar cambios en la base de datos
     @Transactional(readOnly = true)
     public List<CategoriaDTO> listarCategorias() {
         return iCategoriaRepository.findAll().stream()
@@ -39,6 +40,7 @@ public class CategoriaService {
 
     // Valida que el nombre no esté duplicado y crea una nueva categoría en el catálogo de la tienda.
     public CategoriaDTO crearCategoria(CrearCategoriaDTO crearCategoriaDTO) {
+        // Regla de negocio: no permite categorías con el mismo nombre (ignora mayúsculas/minúsculas)
         if (iCategoriaRepository.existsByNombreIgnoreCase(crearCategoriaDTO.getNombre())) {
             throw new BadRequestException("Ya existe una categoría con el nombre: " + crearCategoriaDTO.getNombre());
         }

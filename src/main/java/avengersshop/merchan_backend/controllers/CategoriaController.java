@@ -26,6 +26,7 @@ public class CategoriaController {
         this.categoriaService = categoriaService;
     }
 
+    // Obtiene todas las categorías disponibles en el catálogo.
     // Documentación OpenAPI/Swagger: define el título y la descripción funcional del endpoint en la interfaz interactiva
     @Operation(
             summary = "Listar todas las categorías",
@@ -40,6 +41,7 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.OK).body(categoriaService.listarCategorias());
     }
 
+    // Obtiene el detalle de una categoría específica según su ID.
     @Operation(
             summary = "Obtener categoría por ID",
             description = "Devuelve el detalle de una categoría específica y sus productos asociados."
@@ -53,6 +55,7 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.OK).body(categoriaService.obtenerPorId(id));
     }
 
+    // Registra una nueva categoría en el sistema previa validación de datos.
     @Operation(
             summary = "Crear nueva categoría",
             description = "Registra una categoría en la base de datos previa comprobación de nombres duplicados."
