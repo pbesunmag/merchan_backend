@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático
 public class ProductoService {
@@ -43,9 +45,11 @@ public class ProductoService {
 
     // Valida que el nombre no esté duplicado, asigna la categoría y crea un nuevo artículo en la tienda.
     public ProductoDTO crearProducto(CrearProductoDTO crearProductoDto) {
-        // Regla de negocio: no permite productos con el mismo nombre (ignora mayúsculas/minúsculas)
-        if (iProductoRepository.existsByNombreIgnoreCase(crearProductoDto.getNombre())) {
-            throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre());
+        Optional<Producto> productoExistente = iProductoRepository.findByNombreIgnoreCase(crearProductoDto.getNombre());
+
+        if (productoExistente.isPresent()) {
+            throw new BadRequestException("Ya existe un producto con el nombre: " + crearProductoDto.getNombre()
+                    + ". ID del producto asociado: " + productoExistente.get().getId() + ".");
         }
 
         Categoria categoria = iCategoriaRepository.findById(crearProductoDto.getCategoriaId())

@@ -3,13 +3,12 @@ package avengersshop.merchan_backend.repositories;
 import avengersshop.merchan_backend.models.Producto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IProductoRepository extends JpaRepository<Producto, Long> {
@@ -24,4 +23,7 @@ public interface IProductoRepository extends JpaRepository<Producto, Long> {
 
     // Verifica si ya existe un merchandising registrado con ese nombre para evitar crear productos repetidos.
     boolean existsByNombreIgnoreCase(String nombre);
+
+    // Recupera el producto completo por nombre para acceder a su ID en caso de conflicto
+    Optional<Producto> findByNombreIgnoreCase(String nombre);
 }

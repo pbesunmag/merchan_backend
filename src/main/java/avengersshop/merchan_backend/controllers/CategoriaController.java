@@ -68,4 +68,12 @@ public class CategoriaController {
     public ResponseEntity<CategoriaDTO> crearCategoria(@Valid @RequestBody CrearCategoriaDTO crearCategoriaDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crearCategoria(crearCategoriaDTO));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoriaDTO> modificarCategoria(
+            @PathVariable Long id,
+            @Valid @RequestBody CrearCategoriaDTO categoriaDto // 👈 Reutilizas el que ya existe
+    ) {
+        return ResponseEntity.ok(categoriaService.modificarCategoria(id, categoriaDto));
+    }
 }

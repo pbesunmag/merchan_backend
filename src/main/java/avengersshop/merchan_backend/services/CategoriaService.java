@@ -6,6 +6,7 @@ import avengersshop.merchan_backend.exceptions.BadRequestException;
 import avengersshop.merchan_backend.exceptions.ResourceNotFoundException;
 import avengersshop.merchan_backend.models.Categoria;
 import avengersshop.merchan_backend.repositories.ICategoriaRepository;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +52,13 @@ public class CategoriaService {
 
         Categoria guardada = iCategoriaRepository.save(categoria);
         return CategoriaDTO.fromEntity(guardada);
+    }
+
+    public CategoriaDTO modificarCategoria(Long id, @Valid CrearCategoriaDTO categoriaDto) {
+        Categoria categoria = iCategoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada."));
+        categoria.setNombre(categoriaDto.getNombre());
+        categoria.setDescripcion(categoriaDto.getDescripcion());
+        return CategoriaDTO.fromEntity(iCategoriaRepository.save(categoria));
     }
 }
