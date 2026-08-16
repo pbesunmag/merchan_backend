@@ -149,6 +149,7 @@ El servidor se iniciará por defecto en `http://localhost:8080`
 * `GET /api/categorias` - Listar todas las categorías con sus productos anidados.
 * `GET /api/categorias/{id}` - Obtener el detalle de una categoría concreta por ID con sus productos.
 * `POST /api/categorias` - Crear nueva categoría.
+* `PUT /api/categorias/{id}` - Actualizar una categoría existente.
 
 ### 📦 Productos (`/api/productos`)
 * `GET /api/productos` - Listar productos paginados (admite `page`, `size`, `sort`, filtro opcional por `idCategoria` y por estado `activos`).

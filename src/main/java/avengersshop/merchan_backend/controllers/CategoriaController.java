@@ -69,6 +69,7 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crearCategoria(crearCategoriaDTO));
     }
 
+    // Modifica la información general de una categoría existente.
     @PutMapping("/{id}")
     public ResponseEntity<CategoriaDTO> modificarCategoria(
             @PathVariable Long id,
