@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "bef3fe03-2f45-4526-8c3c-e1e10dfed2ef",
+    "_postman_id": "785f93f1-8061-4723-bab0-68a774b5300a",
     "name": "Avenger's Shop",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "56601064",
-    "_collection_link": "https://go.postman.co/collection/56601064-bef3fe03-2f45-4526-8c3c-e1e10dfed2ef?source=collection_link"
+    "_exporter_id": "56601093",
+    "_collection_link": "https://go.postman.co/collection/56601093-785f93f1-8061-4723-bab0-68a774b5300a?source=collection_link"
   },
   "item": [
     {
@@ -123,13 +123,13 @@
       "name": "Catergorías",
       "item": [
         {
-          "name": "crearCategoriaColeccionables",
+          "name": "crearCategoriaGorras",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Coleccionables\",\r\n  \"descripcion\": \"Figuras de acción, réplicas y cómics de edición especial\"\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras con bordados de figuras de acción y cómics de Los Vengadores\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -248,7 +248,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Tazas\",\r\n  \"descripcion\": \"Tazas oficiales de los Vengadores fabricadas en porcelana\"\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras con bordados de figuras de acción y cómics oficiales de Los Vengadores\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -256,7 +256,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/categorias/2",
+              "raw": "http://localhost:8080/api/categorias/1",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -265,7 +265,7 @@
               "path": [
                 "api",
                 "categorias",
-                "2"
+                "1"
               ]
             }
           },
@@ -330,7 +330,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América\",\r\n  \"descripcion\": \"Taza de cerámica de 350ml apta para microondas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 14.99,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 1\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Taza Escudo Capitán América\",\r\n  \"descripcion\": \"Taza de cerámica de 350ml apta para microondas\",\r\n  \"personaje\": \"Capitán América\",\r\n  \"precio\": 14.99,\r\n  \"personalizable\": \"Sí\",\r\n  \"categoriaId\": 2\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -359,7 +359,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Camiseta de HULK\",\r\n  \"descripcion\": \"Camiseta de HULK en fondo negro\",\r\n  \"personaje\": \"HULK\",\r\n  \"precio\": 19.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Camiseta de HULK\",\r\n  \"descripcion\": \"Camiseta de HULK en fondo negro\",\r\n  \"personaje\": \"HULK\",\r\n  \"precio\": 19.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 3\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -388,36 +388,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Camiseta de HULK\",\r\n  \"descripcion\": \"Camiseta de HULK en fondo negro\",\r\n  \"personaje\": \"HULK\",\r\n  \"precio\": 19.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8080/api/productos",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "productos"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "crearProducto3 Copy",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Camiseta de HULK\",\r\n  \"descripcion\": \"Camiseta de HULK en fondo negro\",\r\n  \"personaje\": \"HULK\",\r\n  \"precio\": 19.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Gorra de THOR\",\r\n  \"descripcion\": \"Gorra de THOR en fondo negro\",\r\n  \"personaje\": \"THOR\",\r\n  \"precio\": 9.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -764,7 +735,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/pedidos/1/estado",
+              "raw": "http://localhost:8080/api/pedidos/3/estado",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -773,7 +744,7 @@
               "path": [
                 "api",
                 "pedidos",
-                "1",
+                "3",
                 "estado"
               ]
             }
@@ -920,75 +891,6 @@
         },
         {
           "name": "listarPedidos",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/pedidos",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "pedidos"
-              ],
-              "query": [
-                {
-                  "key": "estado",
-                  "value": "CREADO",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "CONFIRMACION_DE_PAGO",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "PAGO_ACEPTADO",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "EN_PREPARACION",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "PEDIDO_LISTO",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "ENVIADO",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "ENTREGADO",
-                  "type": "text",
-                  "disabled": true
-                },
-                {
-                  "key": "estado",
-                  "value": "CANCELADO",
-                  "type": "text",
-                  "disabled": true
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "listarPedidos Copy",
           "request": {
             "method": "GET",
             "header": [],
