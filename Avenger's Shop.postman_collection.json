@@ -129,7 +129,36 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras con bordados de figuras de acción y cómics de Los Vengadores\"\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras con bordados de personajes de Marvel\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearCategoriaFiguras",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Figuras\",\r\n  \"descripcion\": \"Figuras de personajes de Marvel\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -248,7 +277,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras con bordados de figuras de acción y cómics oficiales de Los Vengadores\"\r\n}",
+              "raw": "{\r\n  \"nombre\": \"Gorras\",\r\n  \"descripcion\": \"Gorras oficiales con bordados de personajes de Marvel\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -256,7 +285,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/categorias/1",
+              "raw": "http://localhost:8080/api/categorias/88",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -265,7 +294,7 @@
               "path": [
                 "api",
                 "categorias",
-                "1"
+                "88"
               ]
             }
           },
@@ -389,6 +418,35 @@
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"nombre\": \"Gorra de THOR\",\r\n  \"descripcion\": \"Gorra de THOR en fondo negro\",\r\n  \"personaje\": \"THOR\",\r\n  \"precio\": 9.99,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "productos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearProducto4",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Figura de Thanos\",\r\n  \"descripcion\": \"Figura de Thanos con guantelete y las gemas del infinito\",\r\n  \"personaje\": \"THANOS\",\r\n  \"precio\": 69.95,\r\n  \"personalizable\": \"No\",\r\n  \"categoriaId\": 4\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
