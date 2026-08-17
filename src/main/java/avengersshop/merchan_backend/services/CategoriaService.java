@@ -56,7 +56,7 @@ public class CategoriaService {
 
     public CategoriaDTO modificarCategoria(Long id, @Valid CrearCategoriaDTO categoriaDto) {
         Categoria categoria = iCategoriaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("No se ha encontrado ninguna categoría con ese ID"));
         categoria.setNombre(categoriaDto.getNombre());
         categoria.setDescripcion(categoriaDto.getDescripcion());
         return CategoriaDTO.fromEntity(iCategoriaRepository.save(categoria));
