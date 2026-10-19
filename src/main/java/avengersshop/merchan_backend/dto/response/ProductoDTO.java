@@ -21,6 +21,7 @@ public class ProductoDTO {
     private String personalizable;
     private Boolean activo;
     private String nombreCategoria;
+    private String imagenUrl; // 👈 Campo añadido
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 
@@ -36,6 +37,7 @@ public class ProductoDTO {
                 producto.isActivo(),
                 // Extrae el nombre de la categoría evitando un posible NullPointerException
                 producto.getCategoria() != null ? producto.getCategoria().getNombre() : null,
+                producto.getImagenUrl(), // 👈 Mapeo de la ruta de la imagen
                 producto.getFechaCreacion(),
                 producto.getFechaActualizacion()
         );

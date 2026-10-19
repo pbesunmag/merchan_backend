@@ -32,6 +32,17 @@ public class Producto {
 
     private String personaje;
 
+    @Column(name = "imagen_url")
+    private String imagenUrl;
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
+
     // Mantiene precisión monetaria exacta sin errores de redondeo
     @Column(nullable = false, precision = 10, scale = 2 , name = "precio")
     private BigDecimal precio;
