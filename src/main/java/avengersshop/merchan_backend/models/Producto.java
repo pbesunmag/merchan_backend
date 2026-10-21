@@ -3,12 +3,13 @@ package avengersshop.merchan_backend.models;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class) // Activa la auditoría automática de fechas manejada por Spring Data JPA
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +47,10 @@ public class Producto {
     @Column(nullable = false, precision = 10, scale = 2 , name = "precio")
     private BigDecimal precio;
 
+    // Cantidad disponible en inventario (por defecto 10 unidades)
+    @Column(nullable = false, name = "stock")
+    private Integer stock = 10;
+
     // Indica si el producto permite grabado o estampado personalizado por el cliente
     @Column(nullable = false, name = "personalizable")
     private boolean personalizable = false;
@@ -58,6 +62,10 @@ public class Producto {
     @ManyToOne(fetch = FetchType.LAZY) // LAZY para optimizar el rendimiento y evitar consultas redundantes a la tabla de categorías.
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+
+    // Relación con las tallas del producto (usado para Camisetas)
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductoTalla> tallas = new ArrayList<>();
 
     // Auditoría automática de fechas gestionada por Spring Data JPA
     @CreatedDate

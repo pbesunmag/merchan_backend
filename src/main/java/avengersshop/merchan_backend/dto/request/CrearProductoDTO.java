@@ -1,8 +1,9 @@
 package avengersshop.merchan_backend.dto.request;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,10 @@ public class CrearProductoDTO {
     @Positive(message = "El precio debe ser un número positivo")
     // Se usa BigDecimal para evitar errores de precisión en operaciones financieras
     private BigDecimal precio;
+
+    // Stock inicial opcional (por defecto 10 si no se especifica)
+    @Min(value = 0, message = "El stock no puede ser negativo")
+    private Integer stock = 10;
 
     // Inicialización por defecto en "No" para manejar peticiones donde no se envíe la propiedad
     private String personalizable = "No";

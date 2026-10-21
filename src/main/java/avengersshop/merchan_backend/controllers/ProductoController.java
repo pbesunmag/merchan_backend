@@ -1,7 +1,10 @@
 package avengersshop.merchan_backend.controllers;
 
+import avengersshop.merchan_backend.dto.request.AjustarStockDTO;
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
+import avengersshop.merchan_backend.dto.response.ProductoTallaDTO;
+import avengersshop.merchan_backend.models.ProductoTalla;
 import avengersshop.merchan_backend.services.ProductoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/productos")
 @CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
@@ -29,7 +34,6 @@ public class ProductoController {
     }
 
     // Obtiene la lista de productos paginada con filtros opcionales por estado activo o categoría.
-    // Documentación Swagger de búsqueda paginada con filtros opcionales
     @Operation(
             summary = "Listar productos paginados",
             description = "Obtiene el listado de productos con soporte para paginación, ordenación y filtrado opcional por categoría o estado activo."
@@ -41,7 +45,6 @@ public class ProductoController {
     public ResponseEntity<Page<ProductoDTO>> listarProductos(
             @Parameter(description = "Filtrar por estado activo (true/false)") @RequestParam(required = false) Boolean activos,
             @Parameter(description = "ID de la categoría para filtrar") @RequestParam(required = false) Long idCategoria,
-            // @PageableDefault establece paginación por defecto (Página 0, 10 elementos por página, ordenados por fecha)
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -60,6 +63,39 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.obtenerPorId(id));
     }
 
+    // Obtiene el listado de tallas y su stock para un producto específico (ej. Camisetas).
+    @Operation(summary = "Listar tallas de un producto", description = "Devuelve las tallas y disponibilidad de stock de un producto.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tallas obtenidas correctamente"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
+    @GetMapping("/{id}/tallas")
+    public ResponseEntity<List<ProductoTallaDTO>> listarTallasPorProducto(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.listarTallasPorProducto(id));
+    }
+
+    // POST: Añadir o asignar una nueva talla al producto
+    @PostMapping("/{id}/tallas")
+    public ResponseEntity<?> agregarTalla(
+            @PathVariable Long id,
+            @RequestBody ProductoTallaDTO dto) {
+
+        // Llamada a tu servicio para guardar la talla vinculada al producto
+        ProductoTalla nuevaTalla = productoService.agregarTallaAProducto(id, dto.getTalla(), dto.getStock());
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaTalla);
+    }
+
+    // PUT: Actualizar el stock de una talla existente (ej: /api/productos/1/tallas/M)
+    @PutMapping("/{id}/tallas/{talla}")
+    public ResponseEntity<?> actualizarStockTalla(
+            @PathVariable Long id,
+            @PathVariable String talla,
+            @RequestBody ProductoTallaDTO dto) {
+
+        ProductoTalla tallaActualizada = productoService.actualizarStockTalla(id, talla, dto.getStock());
+        return ResponseEntity.ok(tallaActualizada);
+    }
+
     // Registra un nuevo producto en el catálogo.
     @Operation(summary = "Crear un nuevo producto", description = "Registra un producto en el catálogo previa validación de datos.")
     @ApiResponses(value = {
@@ -69,7 +105,6 @@ public class ProductoController {
     })
     @PostMapping
     public ResponseEntity<ProductoDTO> crearProducto(@Valid @RequestBody CrearProductoDTO crearProductoDto) {
-        // @Valid ejecuta las reglas de Bean Validation en el DTO
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crearProducto(crearProductoDto));
     }
 
@@ -85,6 +120,37 @@ public class ProductoController {
             @Valid @RequestBody CrearProductoDTO crearProductoDto
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.actualizarProducto(id, crearProductoDto));
+    }
+
+    // Ajusta el stock de un producto incrementando o decrementando unidades (general o indicando talla en el body).
+    @Operation(summary = "Ajustar stock de producto", description = "Incrementa o decrementa manualmente las unidades en inventario de un producto.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Stock actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Stock insuficiente u operación inválida"),
+            @ApiResponse(responseCode = "404", description = "Producto o talla no encontrados")
+    })
+    @RequestMapping(value = "/{id}/stock", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<ProductoDTO> ajustarStock(
+            @PathVariable Long id,
+            @Valid @RequestBody AjustarStockDTO ajustarStockDto
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.ajustarStock(id, ajustarStockDto));
+    }
+
+    // Ajusta el stock de una talla específica de un producto (ej. /api/productos/2/tallas/M/stock).
+    @Operation(summary = "Ajustar stock por talla", description = "Incrementa o decrementa el stock de una talla específica de una camiseta.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Stock de la talla actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Stock insuficiente en la talla u operación inválida"),
+            @ApiResponse(responseCode = "404", description = "Producto o talla no encontrados")
+    })
+    @RequestMapping(value = "/{id}/tallas/{talla}/stock", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<ProductoDTO> ajustarStockPorTalla(
+            @PathVariable Long id,
+            @PathVariable String talla,
+            @Valid @RequestBody AjustarStockDTO ajustarStockDto
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.ajustarStockPorTalla(id, talla, ajustarStockDto));
     }
 
     // Aplica borrado lógico desactivando un producto para ocultarlo del catálogo activo.
@@ -105,7 +171,6 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     @PatchMapping("/{id}/reactivar")
-    // Permite restaurar un producto inactivo cambiando su estado sin eliminar registros
     public ResponseEntity<ProductoDTO> reactivarProducto(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.reactivarProducto(id));
     }

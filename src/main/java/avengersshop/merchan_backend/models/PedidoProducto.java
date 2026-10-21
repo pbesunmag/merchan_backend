@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-
 @Entity
 @Table(name = "pedido_producto")
 // Se utilizan @Getter y @Setter en lugar de @Data para evitar consultas no deseadas y ciclos infinitos en relaciones JPA
@@ -33,6 +32,10 @@ public class PedidoProducto {
     // Guardado del precio histórico unitario.
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precioUnitario;
+
+    // Talla seleccionada en caso de productos con tallas (ej. "S", "M", "L", "XL")
+    @Column(length = 10, name = "talla")
+    private String talla;
 
     // Campo de texto libre para grabados o estampados personalizados (ej. nombre para la camiseta de Marvel)
     @Column(length = 500)

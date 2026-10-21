@@ -17,6 +17,7 @@ public class LineaPedidoDTO {
     private String productoNombre;
     private BigDecimal precioUnitario; // Uso de BigDecimal para mantener precisión monetaria
     private Integer cantidad;
+    private String talla;
     private String textoPersonalizado;
 
     public static LineaPedidoDTO fromEntity(PedidoProducto pp) {
@@ -26,6 +27,7 @@ public class LineaPedidoDTO {
                 pp.getProducto() != null ? pp.getProducto().getNombre() : null,
                 pp.getPrecioUnitario(),
                 pp.getCantidad(),
+                pp.getTalla(),
                 pp.getTextoPersonalizado()
         );
     }
