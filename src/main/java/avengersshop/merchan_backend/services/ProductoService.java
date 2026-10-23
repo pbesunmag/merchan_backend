@@ -14,6 +14,7 @@ import avengersshop.merchan_backend.repositories.IProductoRepository;
 import avengersshop.merchan_backend.repositories.IProductoTallaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +26,27 @@ import java.util.Optional;
 public class ProductoService {
 
     private static final List<String> TALLAS_POR_DEFECTO = List.of("S", "M", "L", "XL");
+    private static final String TOPIC_PRODUCTOS_STOCK = "/topic/productos-stock";
 
     private final IProductoRepository iProductoRepository;
     private final ICategoriaRepository iCategoriaRepository;
     private final IProductoTallaRepository iProductoTallaRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ProductoService(IProductoRepository iProductoRepository,
                            ICategoriaRepository iCategoriaRepository,
-                           IProductoTallaRepository iProductoTallaRepository) {
+                           IProductoTallaRepository iProductoTallaRepository,
+                           SimpMessagingTemplate messagingTemplate) {
         this.iProductoRepository = iProductoRepository;
         this.iCategoriaRepository = iCategoriaRepository;
         this.iProductoTallaRepository = iProductoTallaRepository;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    private void notificarActualizacionStock(ProductoDTO productoActualizado) {
+        if (messagingTemplate != null && productoActualizado != null) {
+            messagingTemplate.convertAndSend(TOPIC_PRODUCTOS_STOCK, productoActualizado);
+        }
     }
 
     // Devuelve el catálogo de productos paginado, filtrando opcionalmente por categoría y estado de disponibilidad.
@@ -102,7 +113,9 @@ public class ProductoService {
         }
 
         Producto productoGuardado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoGuardado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoGuardado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     // Modifica los datos de un producto existente (precio, descripción, personalización) y actualiza su categoría.
@@ -133,7 +146,9 @@ public class ProductoService {
         producto.setCategoria(categoria);
 
         Producto productoActualizado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoActualizado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoActualizado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     // Ajusta el stock manualmente (general o de una talla específica si se envía 'talla').
@@ -161,7 +176,9 @@ public class ProductoService {
         }
 
         Producto productoActualizado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoActualizado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoActualizado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     // Ajusta el stock de una talla específica para un producto (ej. Camisetas) y sincroniza el stock total.
@@ -199,7 +216,9 @@ public class ProductoService {
         producto.setStock(nuevoStockTotal);
 
         Producto productoActualizado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoActualizado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoActualizado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     // Aplica borrado lógico deshabilitando el producto sin eliminar su historial de ventas.
@@ -210,7 +229,9 @@ public class ProductoService {
         producto.setActivo(false);
 
         Producto productoDesactivado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoDesactivado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoDesactivado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     // Vuelve a habilitar un producto descatalogado para que esté disponible nuevamente en el catálogo.
@@ -221,7 +242,9 @@ public class ProductoService {
         producto.setActivo(true);
 
         Producto productoReactivado = iProductoRepository.save(producto);
-        return ProductoDTO.fromEntity(productoReactivado);
+        ProductoDTO dto = ProductoDTO.fromEntity(productoReactivado);
+        notificarActualizacionStock(dto);
+        return dto;
     }
 
     private boolean parsearEsPersonalizable(String texto) {
@@ -260,7 +283,8 @@ public class ProductoService {
                 .mapToInt(pt -> pt.getStock() != null ? pt.getStock() : 0)
                 .sum();
         producto.setStock(nuevoTotal);
-        iProductoRepository.save(producto);
+        Producto productoActualizado = iProductoRepository.save(producto);
+        notificarActualizacionStock(ProductoDTO.fromEntity(productoActualizado));
 
         return guardada;
     }
@@ -286,7 +310,8 @@ public class ProductoService {
                 .mapToInt(pt -> pt.getStock() != null ? pt.getStock() : 0)
                 .sum();
         producto.setStock(nuevoTotal);
-        iProductoRepository.save(producto);
+        Producto productoActualizado = iProductoRepository.save(producto);
+        notificarActualizacionStock(ProductoDTO.fromEntity(productoActualizado));
 
         return guardada;
     }

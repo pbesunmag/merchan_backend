@@ -5,6 +5,7 @@ import avengersshop.merchan_backend.dto.request.CambiarEstadoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CrearPedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoPantallaDTO;
+import avengersshop.merchan_backend.dto.response.ProductoDTO;
 import avengersshop.merchan_backend.exceptions.BadRequestException;
 import avengersshop.merchan_backend.exceptions.ResourceNotFoundException;
 import avengersshop.merchan_backend.models.EstadoPedido;
@@ -19,6 +20,7 @@ import avengersshop.merchan_backend.repositories.IProductoTallaRepository;
 import avengersshop.merchan_backend.repositories.ITerminalRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,19 +32,30 @@ import java.util.Optional;
 @Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático ante excepciones
 public class PedidoService {
 
+    private static final String TOPIC_PRODUCTOS_STOCK = "/topic/productos-stock";
+
     private final IPedidoRepository iPedidoRepository;
     private final IProductoRepository iProductoRepository;
     private final IProductoTallaRepository iProductoTallaRepository;
     private final ITerminalRepository iTerminalRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public PedidoService(IPedidoRepository iPedidoRepository,
                          IProductoRepository iProductoRepository,
                          IProductoTallaRepository iProductoTallaRepository,
-                         ITerminalRepository iTerminalRepository) {
+                         ITerminalRepository iTerminalRepository,
+                         SimpMessagingTemplate messagingTemplate) {
         this.iPedidoRepository = iPedidoRepository;
         this.iProductoRepository = iProductoRepository;
         this.iProductoTallaRepository = iProductoTallaRepository;
         this.iTerminalRepository = iTerminalRepository;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    private void notificarActualizacionStock(Producto producto) {
+        if (messagingTemplate != null && producto != null) {
+            messagingTemplate.convertAndSend(TOPIC_PRODUCTOS_STOCK, ProductoDTO.fromEntity(producto));
+        }
     }
 
     // Crear nuevo pedido con generación automática de código
@@ -85,6 +98,7 @@ public class PedidoService {
 
         boolean tieneTallas = producto.getTallas() != null && !producto.getTallas().isEmpty();
 
+        Producto productoActualizado;
         if (tieneTallas || tallaSolicitada != null) {
             if (tallaSolicitada == null) {
                 throw new BadRequestException("Debe especificar una talla para este producto.");
@@ -105,15 +119,17 @@ public class PedidoService {
                     .mapToInt(pt -> pt.getStock() != null ? pt.getStock() : 0)
                     .sum();
             producto.setStock(nuevoStockTotal);
-            iProductoRepository.save(producto);
+            productoActualizado = iProductoRepository.save(producto);
         } else {
             int stockActual = producto.getStock() != null ? producto.getStock() : 0;
             if (stockActual < cantidadSolicitada) {
                 throw new BadRequestException("Stock insuficiente");
             }
             producto.setStock(stockActual - cantidadSolicitada);
-            iProductoRepository.save(producto);
+            productoActualizado = iProductoRepository.save(producto);
         }
+
+        notificarActualizacionStock(productoActualizado);
 
         // Si el mismo producto y misma talla ya existen en el pedido, incrementamos cantidad
         Optional<PedidoProducto> lineaExistente = pedido.getProductos().stream()
@@ -166,7 +182,8 @@ public class PedidoService {
         }
         int stockActual = producto.getStock() != null ? producto.getStock() : 0;
         producto.setStock(stockActual + lineaAEliminar.getCantidad());
-        iProductoRepository.save(producto);
+        Producto productoActualizado = iProductoRepository.save(producto);
+        notificarActualizacionStock(productoActualizado);
 
         pedido.getProductos().remove(lineaAEliminar);
 
