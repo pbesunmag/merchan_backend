@@ -36,4 +36,43 @@ public enum EstadoPedido {
         }
         throw new IllegalArgumentException("Estado de pedido no válido: " + value);
     }
+
+    // Valida si la transición desde el estado actual hacia el nuevo estado es lícita.
+    public boolean puedeTransicionarA(EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null || this == nuevoEstado) {
+            return false;
+        }
+
+        // Estados finales irreversibles
+        if (this == ENTREGADO || this == CANCELADO) {
+            return false;
+        }
+
+        // La cancelación está permitida desde cualquier estado activo previo a la entrega
+        if (nuevoEstado == CANCELADO) {
+            return true;
+        }
+
+        return switch (this) {
+            case CREADO -> nuevoEstado == CONFIRMACION_DE_PAGO
+                        || nuevoEstado == PAGO_ACEPTADO
+                        || nuevoEstado == EN_PREPARACION;
+
+            case CONFIRMACION_DE_PAGO -> nuevoEstado == PAGO_ACEPTADO
+                                      || nuevoEstado == EN_PREPARACION;
+
+            case PAGO_ACEPTADO -> nuevoEstado == EN_PREPARACION;
+
+            case EN_PREPARACION -> nuevoEstado == PEDIDO_LISTO
+                                || nuevoEstado == CREADO; // Permite revertir desde cocina
+
+            case PEDIDO_LISTO -> nuevoEstado == ENVIADO
+                              || nuevoEstado == ENTREGADO
+                              || nuevoEstado == EN_PREPARACION; // Permite revertir desde mostrador
+
+            case ENVIADO -> nuevoEstado == ENTREGADO;
+
+            default -> false;
+        };
+    }
 }

@@ -196,7 +196,13 @@ public class PedidoService {
         Pedido pedido = iPedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + pedidoId));
 
-        pedido.setEstado(cambiarEstadoPedidoDTO.getEstadoPedido());
+        EstadoPedido nuevoEstado = cambiarEstadoPedidoDTO.getEstadoPedido();
+        if (!pedido.getEstado().puedeTransicionarA(nuevoEstado)) {
+            throw new BadRequestException("Transición de estado no permitida: de "
+                    + pedido.getEstado() + " a " + nuevoEstado);
+        }
+
+        pedido.setEstado(nuevoEstado);
         return PedidoDTO.fromEntity(iPedidoRepository.save(pedido));
     }
 
