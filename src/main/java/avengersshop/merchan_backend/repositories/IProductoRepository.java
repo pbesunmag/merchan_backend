@@ -26,4 +26,6 @@ public interface IProductoRepository extends JpaRepository<Producto, Long> {
 
     // Recupera el producto completo por nombre para acceder a su ID en caso de conflicto
     Optional<Producto> findByNombreIgnoreCase(String nombre);
+
+
 }
