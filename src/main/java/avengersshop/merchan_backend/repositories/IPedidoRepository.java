@@ -27,6 +27,9 @@ public interface IPedidoRepository extends JpaRepository<Pedido, Long> {
     // Obtiene los pedidos ordenados desde el más antiguo
     List<Pedido> findAllByOrderByFechaCreacionAsc();
 
+    // Pedidos creados dentro de un intervalo (usado por los informes).
+    List<Pedido> findByFechaCreacionBetweenOrderByFechaCreacionAsc(java.time.LocalDateTime desde, java.time.LocalDateTime hasta);
+
     // Lista los pedidos de un estado en particular ordenados por antigüedad.
     List<Pedido> findByEstadoOrderByFechaCreacionAsc(EstadoPedido estado);
 }

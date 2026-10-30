@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
-@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@CrossOrigin(origins = "*", allowedHeaders = "*") // Permite solicitudes desde cualquier origen (Frontend)
 @Tag(name = "🏷️ Categorías", description = "Endpoints para la gestión de categorías del catálogo") // Categorización en Swagger UI
 public class CategoriaController {
 

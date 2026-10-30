@@ -15,7 +15,8 @@ public interface IPedidoProductoRepository extends JpaRepository<PedidoProducto,
     @Query("SELECT new avengersshop.merchan_backend.dto.response.ProductoMasVendidoDTO(" +
            "pp.producto.id, pp.producto.nombre, SUM(pp.cantidad)) " +
            "FROM PedidoProducto pp " +
-           "WHERE pp.pedido.estado != avengersshop.merchan_backend.models.EstadoPedido.CANCELADO " +
+           "WHERE pp.pedido.estado NOT IN (avengersshop.merchan_backend.models.EstadoPedido.CANCELADO, " +
+           "avengersshop.merchan_backend.models.EstadoPedido.DEVUELTO) " +
            "GROUP BY pp.producto.id, pp.producto.nombre " +
            "ORDER BY SUM(pp.cantidad) DESC")
     List<ProductoMasVendidoDTO> findProductosMasVendidos();

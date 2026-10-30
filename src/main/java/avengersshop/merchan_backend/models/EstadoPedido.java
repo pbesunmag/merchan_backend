@@ -12,7 +12,8 @@ public enum EstadoPedido {
     PEDIDO_LISTO("PEDIDO LISTO"),
     ENVIADO("ENVIADO"),
     ENTREGADO("ENTREGADO"),
-    CANCELADO("CANCELADO");
+    CANCELADO("CANCELADO"),
+    DEVUELTO("DEVUELTO"); // Estado final: pedido entregado que fue devuelto y reembolsado
 
     private final String value;
 
@@ -44,7 +45,17 @@ public enum EstadoPedido {
         }
 
         // Estados finales irreversibles
-        if (this == ENTREGADO || this == CANCELADO) {
+        if (this == CANCELADO || this == DEVUELTO) {
+            return false;
+        }
+
+        // Un pedido entregado solo puede pasar a DEVUELTO (devolución y reembolso)
+        if (this == ENTREGADO) {
+            return nuevoEstado == DEVUELTO;
+        }
+
+        // DEVUELTO solo es alcanzable desde ENTREGADO
+        if (nuevoEstado == DEVUELTO) {
             return false;
         }
 

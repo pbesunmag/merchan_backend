@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@CrossOrigin(origins = "*", allowedHeaders = "*") // Permite solicitudes desde cualquier origen (Frontend)
 @Tag(name = "📦 Productos", description = "Endpoints para la gestión del catálogo e inventario de productos") // Categorización en Swagger UI
 public class ProductoController {
 

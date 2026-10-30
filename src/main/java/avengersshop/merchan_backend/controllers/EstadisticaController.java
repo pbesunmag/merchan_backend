@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/estadisticas")
-@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@CrossOrigin(origins = "*", allowedHeaders = "*") // Permite solicitudes desde cualquier origen (Frontend)
 @Tag(name = "📊 Estadísticas", description = "Endpoints de analítica y métricas de ventas") // Categorización en Swagger UI
 public class EstadisticaController {
 

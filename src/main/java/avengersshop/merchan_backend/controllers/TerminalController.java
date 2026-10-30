@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/terminales")
-@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@CrossOrigin(origins = "*", allowedHeaders = "*") // Permite solicitudes desde cualquier origen (Frontend)
 @Tag(name = "🖥️ Terminales", description = "Endpoints para la gestión de puntos de venta y terminales físicas") // Categorización en Swagger UI
 public class TerminalController {
 

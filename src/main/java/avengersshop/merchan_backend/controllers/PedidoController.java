@@ -2,11 +2,13 @@ package avengersshop.merchan_backend.controllers;
 
 import avengersshop.merchan_backend.dto.request.AgregarProductoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarEstadoPedidoDTO;
+import avengersshop.merchan_backend.dto.request.CambiarProductoDTO;
 import avengersshop.merchan_backend.dto.request.CrearPedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoPantallaDTO;
 import avengersshop.merchan_backend.models.EstadoPedido;
 import avengersshop.merchan_backend.services.PedidoService;
+import avengersshop.merchan_backend.services.PostventaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,14 +26,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen (Frontend)
+@CrossOrigin(origins = "*", allowedHeaders = "*") // Permite solicitudes desde cualquier origen (Frontend)
 @Tag(name = "📋 Pedidos", description = "Endpoints para el control de comandas y gestión de pedidos") // Categorización en Swagger UI
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final PostventaService postventaService;
 
-    public PedidoController(PedidoService pedidoService) {
+    public PedidoController(PedidoService pedidoService, PostventaService postventaService) {
         this.pedidoService = pedidoService;
+        this.postventaService = postventaService;
     }
 
     // Documentación OpenAPI/Swagger para la consulta paginada
@@ -154,4 +158,37 @@ public class PedidoController {
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(pedidoService.cambiarEstadoPedido(pedidoId, cambiarEstadoPedidoDTO));
     }
-}
+
+    // Devolución total de un pedido entregado con reembolso en caja.
+    @Operation(
+            summary = "Devolver pedido",
+            description = "Devuelve un pedido ENTREGADO: repone el stock, registra el reembolso en caja y deja el pedido en estado DEVUELTO."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Devolución realizada con éxito"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en estado ENTREGADO"),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado")
+    })
+    @PostMapping("/{id}/devolucion")
+    public ResponseEntity<PedidoDTO> devolverPedido(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(postventaService.devolverPedido(id));
+    }
+
+    // Cambio de un artículo de un pedido entregado por otro de igual o mayor valor.
+    @Operation(
+            summary = "Cambiar producto de un pedido",
+            description = "Sustituye una línea de un pedido ENTREGADO por otro producto de igual o mayor precio. "
+                    + "Ajusta el stock y, si hay diferencia a favor de la tienda, la registra en caja."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cambio realizado con éxito"),
+            @ApiResponse(responseCode = "400", description = "Pedido no entregado, precio inferior o stock insuficiente"),
+            @ApiResponse(responseCode = "404", description = "Pedido, línea o producto no encontrado")
+    })
+    @PostMapping("/{id}/cambio-producto")
+    public ResponseEntity<PedidoDTO> cambiarProducto(
+            @PathVariable Long id,
+            @Valid @RequestBody CambiarProductoDTO cambiarProductoDTO
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(postventaService.cambiarProducto(id, cambiarProductoDTO));
+    }}

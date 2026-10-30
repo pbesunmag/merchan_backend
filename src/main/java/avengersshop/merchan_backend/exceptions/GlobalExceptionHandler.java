@@ -1,5 +1,7 @@
 package avengersshop.merchan_backend.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Manejo de Recurso No Encontrado (404 NOT FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -47,6 +51,7 @@ public class GlobalExceptionHandler {
     // Captura Genérica para Errores Inesperados del Sistema (500 INTERNAL SERVER ERROR)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+        log.error("Error interno no controlado", ex); // Deja el stacktrace en la consola del backend
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Error Interno del Servidor",

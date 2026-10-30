@@ -14,6 +14,7 @@ import avengersshop.merchan_backend.models.PedidoProducto;
 import avengersshop.merchan_backend.models.Producto;
 import avengersshop.merchan_backend.models.ProductoTalla;
 import avengersshop.merchan_backend.models.Terminal;
+import avengersshop.merchan_backend.models.TipoMovimientoCaja;
 import avengersshop.merchan_backend.repositories.IPedidoRepository;
 import avengersshop.merchan_backend.repositories.IProductoRepository;
 import avengersshop.merchan_backend.repositories.IProductoTallaRepository;
@@ -24,6 +25,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,17 +41,20 @@ public class PedidoService {
     private final IProductoTallaRepository iProductoTallaRepository;
     private final ITerminalRepository iTerminalRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CajaService cajaService;
 
     public PedidoService(IPedidoRepository iPedidoRepository,
                          IProductoRepository iProductoRepository,
                          IProductoTallaRepository iProductoTallaRepository,
                          ITerminalRepository iTerminalRepository,
-                         SimpMessagingTemplate messagingTemplate) {
+                         SimpMessagingTemplate messagingTemplate,
+                         CajaService cajaService) {
         this.iPedidoRepository = iPedidoRepository;
         this.iProductoRepository = iProductoRepository;
         this.iProductoTallaRepository = iProductoTallaRepository;
         this.iTerminalRepository = iTerminalRepository;
         this.messagingTemplate = messagingTemplate;
+        this.cajaService = cajaService;
     }
 
     private void notificarActualizacionStock(Producto producto) {
@@ -197,12 +202,27 @@ public class PedidoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + pedidoId));
 
         EstadoPedido nuevoEstado = cambiarEstadoPedidoDTO.getEstadoPedido();
+        if (nuevoEstado == EstadoPedido.DEVUELTO) {
+            throw new BadRequestException("Para devolver un pedido use POST /api/pedidos/{id}/devolucion.");
+        }
         if (!pedido.getEstado().puedeTransicionarA(nuevoEstado)) {
             throw new BadRequestException("Transición de estado no permitida: de "
                     + pedido.getEstado() + " a " + nuevoEstado);
         }
 
         pedido.setEstado(nuevoEstado);
+
+        // Al entregar el pedido se registra el ingreso por venta en caja
+        if (nuevoEstado == EstadoPedido.ENTREGADO
+                && !cajaService.existeMovimiento(pedido.getId(), TipoMovimientoCaja.VENTA)) {
+            BigDecimal total = pedido.getProductos().stream()
+                    .filter(pp -> pp.getPrecioUnitario() != null && pp.getCantidad() != null)
+                    .map(pp -> pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, total,
+                    "Venta del pedido " + pedido.getCodigo(), pedido.getId());
+        }
+
         return PedidoDTO.fromEntity(iPedidoRepository.save(pedido));
     }
 
