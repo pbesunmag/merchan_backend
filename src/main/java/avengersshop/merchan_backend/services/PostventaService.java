@@ -2,6 +2,7 @@ package avengersshop.merchan_backend.services;
 
 import avengersshop.merchan_backend.dto.request.CambiarProductoDTO;
 import avengersshop.merchan_backend.dto.request.DevolverLineaDTO;
+import avengersshop.merchan_backend.dto.request.ItemCambioDestinoDTO;
 import avengersshop.merchan_backend.dto.response.MetricasCajaDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
@@ -21,6 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 // Gestión contable y de postventa: devoluciones, cambios de producto y métricas de beneficio.
 @Service
@@ -117,7 +123,7 @@ public class PostventaService {
         return PedidoDTO.fromEntity(iPedidoRepository.save(pedido));
     }
 
-    // Cambio de una línea por otro producto disponible en stock; ajusta caja según diferencia (cobra o reembolsa).
+    // Cambio de una línea por uno o varios artículos del catálogo (cesta de cambio); ajusta stock y caja según diferencia.
     public PedidoDTO cambiarProducto(Long pedidoId, CambiarProductoDTO dto) {
         Pedido pedido = obtenerPedido(pedidoId);
 
@@ -131,93 +137,120 @@ public class PostventaService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "La línea " + dto.getLineaPedidoId() + " no pertenece al pedido " + pedidoId));
 
-        int cantidadEntregada = dto.getCantidad();
-        if (cantidadEntregada <= 0 || cantidadEntregada > linea.getCantidad()) {
-            throw new BadRequestException("No se pueden cambiar más unidades (" + cantidadEntregada
+        Integer cantEntregadaDto = dto.getCantidadEntregada() != null ? dto.getCantidadEntregada() : dto.getCantidad();
+        if (cantEntregadaDto == null || cantEntregadaDto <= 0 || cantEntregadaDto > linea.getCantidad()) {
+            throw new BadRequestException("No se pueden cambiar más unidades (" + cantEntregadaDto
                     + ") de las compradas en la línea (" + linea.getCantidad() + ").");
         }
+        int cantidadEntregada = cantEntregadaDto;
 
-        int cantidadNueva = dto.getCantidadNueva() != null && dto.getCantidadNueva() > 0
-                ? dto.getCantidadNueva()
-                : cantidadEntregada;
-
-        Producto nuevoProducto = iProductoRepository.findById(dto.getNuevoProductoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + dto.getNuevoProductoId()));
-        if (!nuevoProducto.isActivo()) {
-            throw new BadRequestException("El producto seleccionado no está activo.");
-        }
-
-        String nuevaTalla = dto.getNuevaTalla() != null && !dto.getNuevaTalla().isBlank()
-                ? dto.getNuevaTalla().trim().toUpperCase()
-                : null;
-        boolean tieneTallas = nuevoProducto.getTallas() != null && !nuevoProducto.getTallas().isEmpty();
-        if (tieneTallas && nuevaTalla == null) {
-            throw new BadRequestException("Debe especificar una talla para este producto.");
-        }
-        if (!tieneTallas) {
-            nuevaTalla = null; // Producto sin tallas: se ignora cualquier talla recibida
+        // Normalizar la lista de artículos de destino (admite cesta múltiple o formato 1 a 1)
+        List<ItemCambioDestinoDTO> itemsDestino = new ArrayList<>();
+        if (dto.getNuevosArticulos() != null && !dto.getNuevosArticulos().isEmpty()) {
+            itemsDestino.addAll(dto.getNuevosArticulos());
+        } else if (dto.getNuevoProductoId() != null) {
+            int cantNueva = dto.getCantidadNueva() != null && dto.getCantidadNueva() > 0
+                    ? dto.getCantidadNueva()
+                    : cantidadEntregada;
+            itemsDestino.add(new ItemCambioDestinoDTO(dto.getNuevoProductoId(), cantNueva, dto.getNuevaTalla()));
+        } else {
+            throw new BadRequestException("Debe seleccionar al menos un artículo para realizar el cambio.");
         }
 
         Producto productoOriginal = linea.getProducto();
         String tallaOriginal = linea.getTalla();
-        if (productoOriginal.getId().equals(nuevoProducto.getId())
-                && java.util.Objects.equals(tallaOriginal, nuevaTalla)
-                && cantidadEntregada == cantidadNueva) {
-            throw new BadRequestException("El nuevo producto y talla coinciden con los originales.");
-        }
-
-        // Cálculo de diferencia económica: (precioNuevo * cantidadNueva) - (precioAntiguo * cantidadEntregada)
         BigDecimal precioAntiguo = linea.getPrecioUnitario();
-        BigDecimal precioNuevo = nuevoProducto.getPrecio();
         BigDecimal totalAntiguo = precioAntiguo.multiply(BigDecimal.valueOf(cantidadEntregada));
-        BigDecimal totalNuevo = precioNuevo.multiply(BigDecimal.valueOf(cantidadNueva));
-        BigDecimal diferencia = totalNuevo.subtract(totalAntiguo);
 
-        // Stock: primero se valida y descuenta el nuevo (cantidadNueva), luego se repone el saliente (cantidadEntregada).
-        Producto nuevoActualizado = descontarStock(nuevoProducto, nuevaTalla, cantidadNueva);
+        // 1. Reponer primero el stock del producto saliente
         Producto originalActualizado = reponerStock(productoOriginal, tallaOriginal, cantidadEntregada);
-        notificarActualizacionStock(nuevoActualizado);
         notificarActualizacionStock(originalActualizado);
 
-        // Texto personalizado solo si el nuevo producto lo admite
-        String texto = nuevoProducto.isPersonalizable() ? linea.getTextoPersonalizado() : null;
-
+        // 2. Reducir o eliminar la línea original entregada
         if (cantidadEntregada == linea.getCantidad()) {
-            // Cambio de toda la línea: se sustituye en el sitio con la nueva cantidad
-            linea.setProducto(nuevoProducto);
-            linea.setTalla(nuevaTalla);
-            linea.setCantidad(cantidadNueva);
-            linea.setPrecioUnitario(precioNuevo);
-            linea.setTextoPersonalizado(texto);
+            pedido.getProductos().remove(linea);
         } else {
-            // Cambio parcial: se reducen las unidades entregadas de la línea original y se añade una nueva con cantidadNueva
             linea.setCantidad(linea.getCantidad() - cantidadEntregada);
-            PedidoProducto nuevaLinea = new PedidoProducto();
-            nuevaLinea.setPedido(pedido);
-            nuevaLinea.setProducto(nuevoProducto);
-            nuevaLinea.setCantidad(cantidadNueva);
-            nuevaLinea.setPrecioUnitario(precioNuevo);
-            nuevaLinea.setTalla(nuevaTalla);
-            nuevaLinea.setTextoPersonalizado(texto);
-            pedido.getProductos().add(nuevaLinea);
         }
 
+        // 3. Procesar cada artículo de la cesta de destino: descontar stock, acumular total y actualizar líneas
+        BigDecimal totalNuevo = BigDecimal.ZERO;
+        List<String> resumenNuevos = new ArrayList<>();
+
+        for (ItemCambioDestinoDTO item : itemsDestino) {
+            if (item.getProductoId() == null) {
+                throw new BadRequestException("Cada artículo de destino debe indicar su productoId.");
+            }
+            int cantItem = item.getCantidad() != null ? item.getCantidad() : 1;
+            if (cantItem <= 0) {
+                throw new BadRequestException("La cantidad de cada artículo nuevo debe ser mayor que cero.");
+            }
+
+            Producto nuevoProducto = iProductoRepository.findById(item.getProductoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + item.getProductoId()));
+            if (!nuevoProducto.isActivo()) {
+                throw new BadRequestException("El producto seleccionado no está activo: " + nuevoProducto.getNombre());
+            }
+
+            String nuevaTalla = item.getTalla() != null && !item.getTalla().isBlank()
+                    ? item.getTalla().trim().toUpperCase()
+                    : null;
+            boolean tieneTallas = nuevoProducto.getTallas() != null && !nuevoProducto.getTallas().isEmpty();
+            if (tieneTallas && nuevaTalla == null) {
+                throw new BadRequestException("Debe especificar una talla para el producto: " + nuevoProducto.getNombre());
+            }
+            if (!tieneTallas) {
+                nuevaTalla = null;
+            }
+
+            Producto nuevoActualizado = descontarStock(nuevoProducto, nuevaTalla, cantItem);
+            notificarActualizacionStock(nuevoActualizado);
+
+            BigDecimal precioNuevo = nuevoProducto.getPrecio();
+            totalNuevo = totalNuevo.add(precioNuevo.multiply(BigDecimal.valueOf(cantItem)));
+            resumenNuevos.add(cantItem + "x " + nuevoProducto.getNombre() + (nuevaTalla != null ? " (" + nuevaTalla + ")" : ""));
+
+            // Si ya existe en el pedido una línea con el mismo producto y talla, sumar unidades; si no, añadir línea
+            final String tallaFinal = nuevaTalla;
+            Optional<PedidoProducto> lineaExistente = pedido.getProductos().stream()
+                    .filter(l -> l.getProducto().getId().equals(nuevoProducto.getId())
+                            && Objects.equals(l.getTalla(), tallaFinal))
+                    .findFirst();
+
+            if (lineaExistente.isPresent()) {
+                PedidoProducto le = lineaExistente.get();
+                le.setCantidad(le.getCantidad() + cantItem);
+                le.setPrecioUnitario(precioNuevo);
+            } else {
+                PedidoProducto nuevaLinea = new PedidoProducto();
+                nuevaLinea.setPedido(pedido);
+                nuevaLinea.setProducto(nuevoProducto);
+                nuevaLinea.setCantidad(cantItem);
+                nuevaLinea.setPrecioUnitario(precioNuevo);
+                nuevaLinea.setTalla(nuevaTalla);
+                nuevaLinea.setTextoPersonalizado(nuevoProducto.isPersonalizable() ? linea.getTextoPersonalizado() : null);
+                pedido.getProductos().add(nuevaLinea);
+            }
+        }
+
+        // 4. Impacto económico en caja: totalNuevo - totalAntiguo
+        BigDecimal diferencia = totalNuevo.subtract(totalAntiguo);
+        String detalleCambio = String.join(", ", resumenNuevos);
+
         if (diferencia.compareTo(BigDecimal.ZERO) > 0) {
-            // El cliente abona la diferencia a favor de la tienda
             cajaService.registrarMovimiento(
                     TipoMovimientoCaja.DIFERENCIA_CAMBIO,
                     diferencia,
                     "Abono de diferencia por cambio en comanda " + pedido.getCodigo() + ": "
-                            + productoOriginal.getNombre() + " -> " + nuevoProducto.getNombre(),
+                            + cantidadEntregada + "x " + productoOriginal.getNombre() + " -> " + detalleCambio,
                     pedido.getId());
         } else if (diferencia.compareTo(BigDecimal.ZERO) < 0) {
-            // La tienda reembolsa la diferencia a favor del cliente
             BigDecimal montoReembolso = diferencia.abs();
             cajaService.registrarMovimiento(
                     TipoMovimientoCaja.DEVOLUCION,
                     montoReembolso.negate(),
                     "Reembolso de diferencia por cambio en comanda " + pedido.getCodigo() + ": "
-                            + productoOriginal.getNombre() + " -> " + nuevoProducto.getNombre(),
+                            + cantidadEntregada + "x " + productoOriginal.getNombre() + " -> " + detalleCambio,
                     pedido.getId());
         }
 

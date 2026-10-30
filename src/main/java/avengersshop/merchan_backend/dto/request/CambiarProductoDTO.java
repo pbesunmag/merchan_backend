@@ -1,11 +1,14 @@
 package avengersshop.merchan_backend.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,19 +19,26 @@ public class CambiarProductoDTO {
     @NotNull(message = "La línea del pedido es obligatoria")
     private Long lineaPedidoId;
 
-    @Schema(description = "ID del producto que sustituye al original", example = "3")
-    @NotNull(message = "El nuevo producto es obligatorio")
+    @Schema(description = "Unidades devueltas de la línea original", example = "2")
+    @Positive(message = "La cantidad entregada debe ser mayor que cero")
+    private Integer cantidadEntregada;
+
+    @Schema(description = "Lista de artículos de destino elegidos para el canje")
+    @Valid
+    private List<ItemCambioDestinoDTO> nuevosArticulos;
+
+    // Campos de compatibilidad con cambio simple (1 a 1)
+    @Schema(description = "ID del producto que sustituye al original (compatibilidad 1 a 1)", example = "3")
     private Long nuevoProductoId;
 
-    @Schema(description = "Talla del nuevo producto (obligatoria si tiene tallas)", example = "M")
+    @Schema(description = "Talla del nuevo producto (compatibilidad 1 a 1)", example = "M")
     private String nuevaTalla;
 
-    @Schema(description = "Unidades entregadas de la línea original", example = "1")
-    @NotNull(message = "La cantidad es obligatoria")
+    @Schema(description = "Unidades entregadas (compatibilidad 1 a 1)", example = "1")
     @Positive(message = "La cantidad debe ser mayor que cero")
     private Integer cantidad;
 
-    @Schema(description = "Unidades a recibir del nuevo producto (si se omite, usa 'cantidad')", example = "1")
+    @Schema(description = "Unidades a recibir del nuevo producto (compatibilidad 1 a 1)", example = "1")
     @Positive(message = "La cantidad nueva debe ser mayor que cero")
     private Integer cantidadNueva;
 }
