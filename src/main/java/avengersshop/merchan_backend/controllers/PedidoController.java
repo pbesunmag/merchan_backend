@@ -4,6 +4,7 @@ import avengersshop.merchan_backend.dto.request.AgregarProductoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarEstadoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarProductoDTO;
 import avengersshop.merchan_backend.dto.request.CrearPedidoDTO;
+import avengersshop.merchan_backend.dto.request.DevolverLineaDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoPantallaDTO;
 import avengersshop.merchan_backend.models.EstadoPedido;
@@ -191,4 +192,24 @@ public class PedidoController {
             @Valid @RequestBody CambiarProductoDTO cambiarProductoDTO
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(postventaService.cambiarProducto(id, cambiarProductoDTO));
-    }}
+    }
+
+    // Devolución parcial: unidades concretas de una línea del pedido.
+    @Operation(
+            summary = "Devolver unidades de una línea",
+            description = "Reembolsa y repone al stock solo las unidades indicadas de una línea de un pedido ENTREGADO. "
+                    + "Si se devuelve todo lo que queda del pedido, este pasa a DEVUELTO."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Devolución realizada con éxito"),
+            @ApiResponse(responseCode = "400", description = "Pedido no entregado o cantidad superior a la comprada"),
+            @ApiResponse(responseCode = "404", description = "Pedido o línea no encontrados")
+    })
+    @PostMapping("/{id}/devolucion-linea")
+    public ResponseEntity<PedidoDTO> devolverLinea(
+            @PathVariable Long id,
+            @Valid @RequestBody DevolverLineaDTO devolverLineaDTO
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(postventaService.devolverLinea(id, devolverLineaDTO));
+    }
+}

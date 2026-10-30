@@ -83,7 +83,7 @@ public class CajaService {
         }
         LocalDate hoy = LocalDate.now();
         return switch (periodo.trim().toLowerCase(Locale.ROOT)) {
-            case "dia" -> hoy.atStartOfDay();
+            case "dia", "día", "hoy" -> hoy.atStartOfDay();
             case "mes" -> hoy.withDayOfMonth(1).atStartOfDay();
             case "anio", "año" -> hoy.withDayOfYear(1).atStartOfDay();
             default -> throw new BadRequestException("Periodo no válido: '" + periodo + "'. Use dia, mes o anio.");

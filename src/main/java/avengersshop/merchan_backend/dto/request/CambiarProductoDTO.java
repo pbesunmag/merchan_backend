@@ -16,15 +16,19 @@ public class CambiarProductoDTO {
     @NotNull(message = "La línea del pedido es obligatoria")
     private Long lineaPedidoId;
 
-    @Schema(description = "ID del producto que sustituye al original", example = "5")
+    @Schema(description = "ID del producto que sustituye al original", example = "3")
     @NotNull(message = "El nuevo producto es obligatorio")
     private Long nuevoProductoId;
 
     @Schema(description = "Talla del nuevo producto (obligatoria si tiene tallas)", example = "M")
     private String nuevaTalla;
 
-    @Schema(description = "Unidades a cambiar", example = "1")
+    @Schema(description = "Unidades entregadas de la línea original", example = "1")
     @NotNull(message = "La cantidad es obligatoria")
     @Positive(message = "La cantidad debe ser mayor que cero")
     private Integer cantidad;
+
+    @Schema(description = "Unidades a recibir del nuevo producto (si se omite, usa 'cantidad')", example = "1")
+    @Positive(message = "La cantidad nueva debe ser mayor que cero")
+    private Integer cantidadNueva;
 }

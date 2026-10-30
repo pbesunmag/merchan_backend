@@ -19,6 +19,7 @@ public class LineaPedidoDTO {
     private Integer cantidad;
     private String talla;
     private String textoPersonalizado;
+    private String imagenUrl; // Miniatura del producto para el desglose de postventa
 
     public static LineaPedidoDTO fromEntity(PedidoProducto pp) {
         return new LineaPedidoDTO(
@@ -28,7 +29,8 @@ public class LineaPedidoDTO {
                 pp.getPrecioUnitario(),
                 pp.getCantidad(),
                 pp.getTalla(),
-                pp.getTextoPersonalizado()
+                pp.getTextoPersonalizado(),
+                pp.getProducto() != null ? pp.getProducto().getImagenUrl() : null
         );
     }
 }
