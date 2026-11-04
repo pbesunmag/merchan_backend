@@ -75,6 +75,7 @@ public enum EstadoPedido {
             case PAGO_ACEPTADO -> nuevoEstado == EN_PREPARACION;
 
             case EN_PREPARACION -> nuevoEstado == PEDIDO_LISTO
+                                || nuevoEstado == PAGO_ACEPTADO // Revertir desde cocina conservando el pago verificado
                                 || nuevoEstado == CREADO; // Permite revertir desde cocina
 
             case PEDIDO_LISTO -> nuevoEstado == ENVIADO

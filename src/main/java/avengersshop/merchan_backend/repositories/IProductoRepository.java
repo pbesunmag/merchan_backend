@@ -1,6 +1,8 @@
 package avengersshop.merchan_backend.repositories;
 
 import avengersshop.merchan_backend.models.Producto;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +28,12 @@ public interface IProductoRepository extends JpaRepository<Producto, Long> {
 
     // Recupera el producto completo por nombre para acceder a su ID en caso de conflicto
     Optional<Producto> findByNombreIgnoreCase(String nombre);
+
+    // Lectura con bloqueo pesimista (SELECT ... FOR UPDATE) usada por el checkout atómico
+    // para evitar sobreventa cuando dos terminales compran el mismo artículo a la vez.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Producto p WHERE p.id = :id")
+    Optional<Producto> findByIdParaActualizar(@Param("id") Long id);
 
 
 }

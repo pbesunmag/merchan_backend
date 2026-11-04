@@ -2,6 +2,7 @@ package avengersshop.merchan_backend.services;
 
 import avengersshop.merchan_backend.dto.request.AgregarProductoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarEstadoPedidoDTO;
+import avengersshop.merchan_backend.dto.request.CheckoutPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CrearPedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
 import avengersshop.merchan_backend.dto.response.PedidoPantallaDTO;
@@ -24,11 +25,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático ante excepciones
@@ -57,10 +67,199 @@ public class PedidoService {
         this.cajaService = cajaService;
     }
 
+    // Emite el nuevo stock por WebSocket. Si hay una transacción activa, se difiere hasta el commit
+    // para no anunciar a los clientes un stock que podría revertirse con un rollback.
     private void notificarActualizacionStock(Producto producto) {
-        if (messagingTemplate != null && producto != null) {
-            messagingTemplate.convertAndSend(TOPIC_PRODUCTOS_STOCK, ProductoDTO.fromEntity(producto));
+        if (messagingTemplate == null || producto == null) {
+            return;
         }
+        ProductoDTO dto = ProductoDTO.fromEntity(producto);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    messagingTemplate.convertAndSend(TOPIC_PRODUCTOS_STOCK, dto);
+                }
+            });
+        } else {
+            messagingTemplate.convertAndSend(TOPIC_PRODUCTOS_STOCK, dto);
+        }
+    }
+
+    // Normaliza la talla recibida (null si viene vacía)
+    private static String normalizarTalla(String talla) {
+        return talla != null && !talla.isBlank() ? talla.trim().toUpperCase() : null;
+    }
+
+    // Normaliza el texto de grabado (null si viene vacío)
+    private static String normalizarTexto(String texto) {
+        return texto != null && !texto.isBlank() ? texto.trim() : null;
+    }
+
+    private static boolean tieneTallas(Producto producto) {
+        return producto.getTallas() != null && !producto.getTallas().isEmpty();
+    }
+
+    // Suma exacta (BigDecimal) de precioUnitario * cantidad de todas las líneas del pedido
+    private static BigDecimal calcularTotal(Pedido pedido) {
+        return pedido.getProductos().stream()
+                .filter(pp -> pp.getPrecioUnitario() != null && pp.getCantidad() != null)
+                .map(pp -> pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // Asigna el código público AV-XXXX a partir del ID autogenerado.
+    // El código temporal es único para no colisionar con el índice UNIQUE en altas concurrentes.
+    private Pedido guardarConCodigo(Pedido pedido) {
+        pedido.setCodigo("TMP-" + UUID.randomUUID());
+        Pedido pedidoGuardado = iPedidoRepository.save(pedido);
+        pedidoGuardado.setCodigo("AV-" + (1000 + pedidoGuardado.getId()));
+        return pedidoGuardado;
+    }
+
+    // Stock disponible para un producto (por talla o general)
+    private int stockDisponible(Producto producto, String talla) {
+        if (talla != null) {
+            return producto.getTallas().stream()
+                    .filter(pt -> talla.equalsIgnoreCase(pt.getTalla()))
+                    .findFirst()
+                    .map(pt -> pt.getStock() != null ? pt.getStock() : 0)
+                    .orElseThrow(() -> new ResourceNotFoundException("Talla '" + talla + "' no encontrada para el producto: " + producto.getNombre()));
+        }
+        return producto.getStock() != null ? producto.getStock() : 0;
+    }
+
+    // Descuenta stock (por talla o general) y recalcula el total. Lanza excepción si no hay unidades suficientes.
+    private Producto descontarStock(Producto producto, String talla, int cantidad) {
+        if (tieneTallas(producto) || talla != null) {
+            if (talla == null) {
+                throw new BadRequestException("Debe especificar una talla para el producto: " + producto.getNombre());
+            }
+            ProductoTalla productoTalla = iProductoTallaRepository
+                    .findByProductoIdAndTallaIgnoreCase(producto.getId(), talla)
+                    .orElseThrow(() -> new ResourceNotFoundException("Talla '" + talla + "' no encontrada para el producto: " + producto.getNombre()));
+
+            int stockTalla = productoTalla.getStock() != null ? productoTalla.getStock() : 0;
+            if (stockTalla < cantidad) {
+                throw new BadRequestException("Stock insuficiente para la talla " + talla + " de " + producto.getNombre());
+            }
+
+            productoTalla.setStock(stockTalla - cantidad);
+            iProductoTallaRepository.save(productoTalla);
+
+            int nuevoStockTotal = producto.getTallas().stream()
+                    .mapToInt(pt -> pt.getStock() != null ? pt.getStock() : 0)
+                    .sum();
+            producto.setStock(nuevoStockTotal);
+        } else {
+            int stockActual = producto.getStock() != null ? producto.getStock() : 0;
+            if (stockActual < cantidad) {
+                throw new BadRequestException("Stock insuficiente para " + producto.getNombre());
+            }
+            producto.setStock(stockActual - cantidad);
+        }
+        return iProductoRepository.save(producto);
+    }
+
+    // Repone al inventario las unidades de una línea (por talla o general)
+    private Producto reponerStock(PedidoProducto linea) {
+        Producto producto = linea.getProducto();
+        if (linea.getTalla() != null) {
+            iProductoTallaRepository.findByProductoIdAndTallaIgnoreCase(producto.getId(), linea.getTalla())
+                    .ifPresent(pt -> {
+                        pt.setStock((pt.getStock() != null ? pt.getStock() : 0) + linea.getCantidad());
+                        iProductoTallaRepository.save(pt);
+                    });
+        }
+        int stockActual = producto.getStock() != null ? producto.getStock() : 0;
+        producto.setStock(stockActual + linea.getCantidad());
+        return iProductoRepository.save(producto);
+    }
+
+    // Línea ya validada lista para persistirse en el checkout
+    private record LineaValidada(Producto producto, String talla, int cantidad, String textoPersonalizado) { }
+
+    /**
+     * Checkout atómico: valida TODAS las líneas (existencia, activo, talla, personalización y stock agregado)
+     * antes de escribir nada. Después crea el pedido, inserta las líneas con el precio oficial del catálogo,
+     * descuenta el inventario y asienta la VENTA en caja. Cualquier excepción provoca rollback completo.
+     */
+    public PedidoDTO checkout(CheckoutPedidoDTO checkoutDTO) {
+        Terminal terminal = iTerminalRepository.findById(checkoutDTO.getTerminalId())
+                .orElseThrow(() -> new ResourceNotFoundException("Terminal no encontrada con ID: " + checkoutDTO.getTerminalId()));
+
+        // 1. Validación previa (sin escrituras). Los productos se bloquean para evitar sobreventa concurrente.
+        Map<Long, Producto> productos = new HashMap<>();
+        Map<String, Integer> demandaPorArticulo = new LinkedHashMap<>();
+        List<LineaValidada> lineasValidadas = new ArrayList<>();
+
+        for (AgregarProductoPedidoDTO linea : checkoutDTO.getLineas()) {
+            Producto producto = productos.computeIfAbsent(linea.getProductoId(), id ->
+                    iProductoRepository.findByIdParaActualizar(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id)));
+
+            if (!producto.isActivo()) {
+                throw new BadRequestException("El producto '" + producto.getNombre() + "' no está activo.");
+            }
+
+            String talla = normalizarTalla(linea.getTalla());
+            if (tieneTallas(producto) && talla == null) {
+                throw new BadRequestException("Debe especificar una talla para el producto: " + producto.getNombre());
+            }
+            if (!tieneTallas(producto) && talla != null) {
+                throw new BadRequestException("El producto '" + producto.getNombre() + "' no se vende por tallas.");
+            }
+
+            String texto = normalizarTexto(linea.getTextoPersonalizado());
+            if (texto != null && !producto.isPersonalizable()) {
+                throw new BadRequestException("El producto '" + producto.getNombre() + "' no admite personalización.");
+            }
+
+            demandaPorArticulo.merge(producto.getId() + "|" + Objects.toString(talla, ""), linea.getCantidad(), Integer::sum);
+            lineasValidadas.add(new LineaValidada(producto, talla, linea.getCantidad(), texto));
+        }
+
+        // Comprueba el stock contra la demanda total por producto/talla (cubre líneas repetidas)
+        for (LineaValidada linea : lineasValidadas) {
+            String clave = linea.producto().getId() + "|" + Objects.toString(linea.talla(), "");
+            int solicitado = demandaPorArticulo.get(clave);
+            int disponible = stockDisponible(linea.producto(), linea.talla());
+            if (disponible < solicitado) {
+                throw new BadRequestException("Stock insuficiente para " + linea.producto().getNombre()
+                        + (linea.talla() != null ? " (talla " + linea.talla() + ")" : "")
+                        + ": solicitadas " + solicitado + ", disponibles " + disponible + ".");
+            }
+        }
+
+        // 2. Escrituras: pedido, líneas, inventario y caja
+        Pedido pedido = new Pedido();
+        pedido.setTerminal(terminal);
+        pedido.setEstado(EstadoPedido.CREADO);
+        pedido = guardarConCodigo(pedido);
+
+        Set<Producto> productosAfectados = new LinkedHashSet<>();
+        for (LineaValidada linea : lineasValidadas) {
+            descontarStock(linea.producto(), linea.talla(), linea.cantidad());
+            productosAfectados.add(linea.producto());
+
+            PedidoProducto nuevaLinea = new PedidoProducto();
+            nuevaLinea.setPedido(pedido);
+            nuevaLinea.setProducto(linea.producto());
+            nuevaLinea.setCantidad(linea.cantidad());
+            nuevaLinea.setPrecioUnitario(linea.producto().getPrecio()); // Precio oficial del catálogo, nunca del cliente
+            nuevaLinea.setTalla(linea.talla());
+            nuevaLinea.setTextoPersonalizado(linea.textoPersonalizado());
+            pedido.getProductos().add(nuevaLinea);
+        }
+
+        Pedido pedidoGuardado = iPedidoRepository.save(pedido);
+
+        cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, calcularTotal(pedidoGuardado),
+                "Venta del pedido " + pedidoGuardado.getCodigo(), pedidoGuardado.getId());
+
+        productosAfectados.forEach(this::notificarActualizacionStock);
+
+        return PedidoDTO.fromEntity(pedidoGuardado);
     }
 
     // Crear nuevo pedido con generación automática de código
@@ -71,14 +270,8 @@ public class PedidoService {
         Pedido pedido = new Pedido();
         pedido.setTerminal(terminal);
         pedido.setEstado(EstadoPedido.CREADO);
-        pedido.setCodigo("PENDIENTE");
 
-        Pedido pedidoGuardado = iPedidoRepository.save(pedido);
-
-        String codigoGenerado = "AV-" + (1000 + pedidoGuardado.getId());
-        pedidoGuardado.setCodigo(codigoGenerado);
-
-        return PedidoDTO.fromEntity(iPedidoRepository.save(pedidoGuardado));
+        return PedidoDTO.fromEntity(iPedidoRepository.save(guardarConCodigo(pedido)));
     }
 
     // Añadir producto a un pedido descontando automáticamente el stock (por talla o general)
@@ -97,43 +290,9 @@ public class PedidoService {
         }
 
         int cantidadSolicitada = agregarProductoPedidoDTO.getCantidad();
-        String tallaSolicitada = agregarProductoPedidoDTO.getTalla() != null && !agregarProductoPedidoDTO.getTalla().isBlank()
-                ? agregarProductoPedidoDTO.getTalla().trim().toUpperCase()
-                : null;
+        String tallaSolicitada = normalizarTalla(agregarProductoPedidoDTO.getTalla());
 
-        boolean tieneTallas = producto.getTallas() != null && !producto.getTallas().isEmpty();
-
-        Producto productoActualizado;
-        if (tieneTallas || tallaSolicitada != null) {
-            if (tallaSolicitada == null) {
-                throw new BadRequestException("Debe especificar una talla para este producto.");
-            }
-            ProductoTalla productoTalla = iProductoTallaRepository
-                    .findByProductoIdAndTallaIgnoreCase(producto.getId(), tallaSolicitada)
-                    .orElseThrow(() -> new ResourceNotFoundException("Talla '" + tallaSolicitada + "' no encontrada para el producto: " + producto.getNombre()));
-
-            int stockTalla = productoTalla.getStock() != null ? productoTalla.getStock() : 0;
-            if (stockTalla < cantidadSolicitada) {
-                throw new BadRequestException("Stock insuficiente para la talla " + tallaSolicitada);
-            }
-
-            productoTalla.setStock(stockTalla - cantidadSolicitada);
-            iProductoTallaRepository.save(productoTalla);
-
-            int nuevoStockTotal = producto.getTallas().stream()
-                    .mapToInt(pt -> pt.getStock() != null ? pt.getStock() : 0)
-                    .sum();
-            producto.setStock(nuevoStockTotal);
-            productoActualizado = iProductoRepository.save(producto);
-        } else {
-            int stockActual = producto.getStock() != null ? producto.getStock() : 0;
-            if (stockActual < cantidadSolicitada) {
-                throw new BadRequestException("Stock insuficiente");
-            }
-            producto.setStock(stockActual - cantidadSolicitada);
-            productoActualizado = iProductoRepository.save(producto);
-        }
-
+        Producto productoActualizado = descontarStock(producto, tallaSolicitada, cantidadSolicitada);
         notificarActualizacionStock(productoActualizado);
 
         // Si el mismo producto y misma talla ya existen en el pedido, incrementamos cantidad
@@ -177,18 +336,7 @@ public class PedidoService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("El producto con ID " + productoId + " no está en este pedido."));
 
-        Producto producto = lineaAEliminar.getProducto();
-        if (lineaAEliminar.getTalla() != null) {
-            iProductoTallaRepository.findByProductoIdAndTallaIgnoreCase(producto.getId(), lineaAEliminar.getTalla())
-                    .ifPresent(pt -> {
-                        pt.setStock((pt.getStock() != null ? pt.getStock() : 0) + lineaAEliminar.getCantidad());
-                        iProductoTallaRepository.save(pt);
-                    });
-        }
-        int stockActual = producto.getStock() != null ? producto.getStock() : 0;
-        producto.setStock(stockActual + lineaAEliminar.getCantidad());
-        Producto productoActualizado = iProductoRepository.save(producto);
-        notificarActualizacionStock(productoActualizado);
+        notificarActualizacionStock(reponerStock(lineaAEliminar));
 
         pedido.getProductos().remove(lineaAEliminar);
 
@@ -212,14 +360,19 @@ public class PedidoService {
 
         pedido.setEstado(nuevoEstado);
 
-        // Al entregar el pedido se registra el ingreso por venta en caja
+        // Cancelación: se repone el inventario y, si la venta ya estaba asentada, se anula en caja
+        if (nuevoEstado == EstadoPedido.CANCELADO) {
+            pedido.getProductos().forEach(linea -> notificarActualizacionStock(reponerStock(linea)));
+            if (cajaService.existeMovimiento(pedido.getId(), TipoMovimientoCaja.VENTA)) {
+                cajaService.registrarMovimiento(TipoMovimientoCaja.DEVOLUCION, calcularTotal(pedido).negate(),
+                        "Anulación por cancelación del pedido " + pedido.getCodigo(), pedido.getId());
+            }
+        }
+
+        // Pedidos heredados (creados sin checkout): la venta se asienta al entregar si aún no existe
         if (nuevoEstado == EstadoPedido.ENTREGADO
                 && !cajaService.existeMovimiento(pedido.getId(), TipoMovimientoCaja.VENTA)) {
-            BigDecimal total = pedido.getProductos().stream()
-                    .filter(pp -> pp.getPrecioUnitario() != null && pp.getCantidad() != null)
-                    .map(pp -> pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, total,
+            cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, calcularTotal(pedido),
                     "Venta del pedido " + pedido.getCodigo(), pedido.getId());
         }
 

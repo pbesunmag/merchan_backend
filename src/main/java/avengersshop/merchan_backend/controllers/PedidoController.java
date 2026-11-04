@@ -3,6 +3,7 @@ package avengersshop.merchan_backend.controllers;
 import avengersshop.merchan_backend.dto.request.AgregarProductoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarEstadoPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CambiarProductoDTO;
+import avengersshop.merchan_backend.dto.request.CheckoutPedidoDTO;
 import avengersshop.merchan_backend.dto.request.CrearPedidoDTO;
 import avengersshop.merchan_backend.dto.request.DevolverLineaDTO;
 import avengersshop.merchan_backend.dto.response.PedidoDTO;
@@ -91,6 +92,23 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 pedidoService.listarPedidosPantalla()
         );
+    }
+
+    // Checkout atómico: crea el pedido completo en una sola transacción.
+    @Operation(
+            summary = "Checkout atómico de pedido",
+            description = "Valida existencia, activación y stock de todas las líneas; si todo es correcto crea el pedido, "
+                    + "inserta las líneas con el precio oficial del catálogo, descuenta inventario y asienta la venta en caja. "
+                    + "Si cualquier línea falla se revierte la operación completa (rollback)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Pedido creado y venta registrada"),
+            @ApiResponse(responseCode = "400", description = "Producto inactivo, talla inválida, personalización no admitida o stock insuficiente"),
+            @ApiResponse(responseCode = "404", description = "Terminal, producto o talla no encontrados")
+    })
+    @PostMapping("/checkout")
+    public ResponseEntity<PedidoDTO> checkout(@Valid @RequestBody CheckoutPedidoDTO checkoutPedidoDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedidoService.checkout(checkoutPedidoDTO));
     }
 
     // Crea un nuevo pedido vacío asociado a una terminal.
