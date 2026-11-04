@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-@Transactional // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático ante excepciones
+@Transactional(rollbackFor = Exception.class) // Garantiza que las operaciones de escritura sean atómicas y manejen rollback automático ante excepciones
 public class PedidoService {
 
     private static final String TOPIC_PRODUCTOS_STOCK = "/topic/productos-stock";
@@ -184,18 +184,19 @@ public class PedidoService {
      * antes de escribir nada. Después crea el pedido, inserta las líneas con el precio oficial del catálogo,
      * descuenta el inventario y asienta la VENTA en caja. Cualquier excepción provoca rollback completo.
      */
+    @Transactional(rollbackFor = Exception.class)
     public PedidoDTO checkout(CheckoutPedidoDTO checkoutDTO) {
         Terminal terminal = iTerminalRepository.findById(checkoutDTO.getTerminalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Terminal no encontrada con ID: " + checkoutDTO.getTerminalId()));
 
-        // 1. Validación previa (sin escrituras). Los productos se bloquean para evitar sobreventa concurrente.
+        // 1. Validación previa (sin escrituras) usando findById estándar de Spring Data JPA
         Map<Long, Producto> productos = new HashMap<>();
         Map<String, Integer> demandaPorArticulo = new LinkedHashMap<>();
         List<LineaValidada> lineasValidadas = new ArrayList<>();
 
         for (AgregarProductoPedidoDTO linea : checkoutDTO.getLineas()) {
             Producto producto = productos.computeIfAbsent(linea.getProductoId(), id ->
-                    iProductoRepository.findByIdParaActualizar(id)
+                    iProductoRepository.findById(id)
                             .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id)));
 
             if (!producto.isActivo()) {
