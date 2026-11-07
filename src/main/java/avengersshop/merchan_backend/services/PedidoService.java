@@ -96,6 +96,15 @@ public class PedidoService {
         return texto != null && !texto.isBlank() ? texto.trim() : null;
     }
 
+    // Normaliza la variante (null si viene vacía; máximo 100 caracteres)
+    private static String normalizarVariante(String variante) {
+        if (variante == null || variante.isBlank()) {
+            return null;
+        }
+        String limpia = variante.trim();
+        return limpia.length() > 100 ? limpia.substring(0, 100) : limpia;
+    }
+
     private static boolean tieneTallas(Producto producto) {
         return producto.getTallas() != null && !producto.getTallas().isEmpty();
     }
@@ -177,7 +186,7 @@ public class PedidoService {
     }
 
     // Línea ya validada lista para persistirse en el checkout
-    private record LineaValidada(Producto producto, String talla, int cantidad, String textoPersonalizado) { }
+    private record LineaValidada(Producto producto, String talla, int cantidad, String textoPersonalizado, String variante) { }
 
     /**
      * Checkout atómico: valida TODAS las líneas (existencia, activo, talla, personalización y stock agregado)
@@ -217,7 +226,7 @@ public class PedidoService {
             }
 
             demandaPorArticulo.merge(producto.getId() + "|" + Objects.toString(talla, ""), linea.getCantidad(), Integer::sum);
-            lineasValidadas.add(new LineaValidada(producto, talla, linea.getCantidad(), texto));
+            lineasValidadas.add(new LineaValidada(producto, talla, linea.getCantidad(), texto, normalizarVariante(linea.getVariante())));
         }
 
         // Comprueba el stock contra la demanda total por producto/talla (cubre líneas repetidas)
@@ -232,7 +241,7 @@ public class PedidoService {
             }
         }
 
-        // 2. Escrituras: pedido, líneas, inventario y caja
+        // 2. Escrituras: pedido, líneas e inventario (la venta se asienta en caja al confirmar el pago)
         Pedido pedido = new Pedido();
         pedido.setTerminal(terminal);
         pedido.setEstado(EstadoPedido.CREADO);
@@ -250,14 +259,13 @@ public class PedidoService {
             nuevaLinea.setPrecioUnitario(linea.producto().getPrecio()); // Precio oficial del catálogo, nunca del cliente
             nuevaLinea.setTalla(linea.talla());
             nuevaLinea.setTextoPersonalizado(linea.textoPersonalizado());
+            nuevaLinea.setVariante(linea.variante());
             pedido.getProductos().add(nuevaLinea);
         }
 
         Pedido pedidoGuardado = iPedidoRepository.save(pedido);
 
-        cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, calcularTotal(pedidoGuardado),
-                "Venta del pedido " + pedidoGuardado.getCodigo(), pedidoGuardado.getId());
-
+        // La venta NO se asienta aquí: el pedido queda en CREADO hasta confirmar el pago.
         productosAfectados.forEach(this::notificarActualizacionStock);
 
         return PedidoDTO.fromEntity(pedidoGuardado);
@@ -316,6 +324,7 @@ public class PedidoService {
             nuevaLinea.setPrecioUnitario(producto.getPrecio());
             nuevaLinea.setTalla(tallaSolicitada);
             nuevaLinea.setTextoPersonalizado(agregarProductoPedidoDTO.getTextoPersonalizado());
+            nuevaLinea.setVariante(normalizarVariante(agregarProductoPedidoDTO.getVariante()));
             pedido.getProductos().add(nuevaLinea);
         }
 
@@ -364,20 +373,39 @@ public class PedidoService {
         // Cancelación: se repone el inventario y, si la venta ya estaba asentada, se anula en caja
         if (nuevoEstado == EstadoPedido.CANCELADO) {
             pedido.getProductos().forEach(linea -> notificarActualizacionStock(reponerStock(linea)));
-            if (cajaService.existeMovimiento(pedido.getId(), TipoMovimientoCaja.VENTA)) {
-                cajaService.registrarMovimiento(TipoMovimientoCaja.DEVOLUCION, calcularTotal(pedido).negate(),
-                        "Anulación por cancelación del pedido " + pedido.getCodigo(), pedido.getId());
-            }
+            anularVentaAsentada(pedido, "Anulación por cancelación del pedido ");
         }
 
-        // Pedidos heredados (creados sin checkout): la venta se asienta al entregar si aún no existe
-        if (nuevoEstado == EstadoPedido.ENTREGADO
-                && !cajaService.existeMovimiento(pedido.getId(), TipoMovimientoCaja.VENTA)) {
-            cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, calcularTotal(pedido),
-                    "Venta del pedido " + pedido.getCodigo(), pedido.getId());
+        // Revertir a CREADO: el pago deja de estar confirmado, se anula la venta asentada
+        if (nuevoEstado == EstadoPedido.CREADO) {
+            anularVentaAsentada(pedido, "Anulación por reversión a CREADO del pedido ");
+        }
+
+        // Confirmación de pago: la venta entra en caja solo cuando el operario confirma el cobro
+        // (también al entregar pedidos heredados sin pago registrado)
+        if (nuevoEstado == EstadoPedido.PAGO_ACEPTADO || nuevoEstado == EstadoPedido.ENTREGADO) {
+            registrarVentaSiProcede(pedido);
         }
 
         return PedidoDTO.fromEntity(iPedidoRepository.save(pedido));
+    }
+
+    // Asienta la venta del pedido en caja (saldo actual + total) si aún no hay una venta vigente
+    private void registrarVentaSiProcede(Pedido pedido) {
+        if (cajaService.ventaNetaPedido(pedido.getId()).signum() > 0) {
+            return;
+        }
+        cajaService.registrarMovimiento(TipoMovimientoCaja.VENTA, calcularTotal(pedido),
+                "Venta del pedido " + pedido.getCodigo(), pedido.getId());
+    }
+
+    // Anula en caja la venta vigente del pedido, si la hay
+    private void anularVentaAsentada(Pedido pedido, String motivo) {
+        BigDecimal neto = cajaService.ventaNetaPedido(pedido.getId());
+        if (neto.signum() > 0) {
+            cajaService.registrarMovimiento(TipoMovimientoCaja.DEVOLUCION, neto.negate(),
+                    motivo + pedido.getCodigo(), pedido.getId());
+        }
     }
 
     // Listar pedidos paginados y filtrados

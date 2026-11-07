@@ -43,6 +43,16 @@ public class CajaService {
         return movimientoCajaRepository.save(movimiento);
     }
 
+    // Importe neto de venta asentado para un pedido (ventas menos devoluciones). 0 si no hay venta vigente.
+    @Transactional(readOnly = true)
+    public BigDecimal ventaNetaPedido(Long pedidoId) {
+        return movimientoCajaRepository.findByPedidoId(pedidoId).stream()
+                .filter(m -> m.getTipoMovimiento() == TipoMovimientoCaja.VENTA
+                        || m.getTipoMovimiento() == TipoMovimientoCaja.DEVOLUCION)
+                .map(MovimientoCaja::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     public boolean existeMovimiento(Long pedidoId, TipoMovimientoCaja tipo) {
         return movimientoCajaRepository.existsByPedidoIdAndTipoMovimiento(pedidoId, tipo);
     }

@@ -40,4 +40,8 @@ public class PedidoProducto {
     // Campo de texto libre para grabados o estampados personalizados (ej. nombre para la camiseta de Marvel)
     @Column(length = 500)
     private String textoPersonalizado;
+
+    // Variante elegida (modelo o diseño del artículo) para que el operario sepa qué preparar
+    @Column(name = "variante", length = 100)
+    private String variante;
 }

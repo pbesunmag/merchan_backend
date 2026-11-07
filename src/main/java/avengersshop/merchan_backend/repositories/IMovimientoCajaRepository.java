@@ -24,6 +24,9 @@ public interface IMovimientoCajaRepository extends JpaRepository<MovimientoCaja,
     // Último movimiento anterior a una fecha (saldo de apertura de un periodo).
     Optional<MovimientoCaja> findTopByFechaBeforeOrderByIdDesc(LocalDateTime fecha);
 
+    // Movimientos asociados a un pedido.
+    List<MovimientoCaja> findByPedidoId(Long pedidoId);
+
     // Comprueba si ya existe un tipo de movimiento para un pedido (evita duplicar ventas o reembolsos).
     boolean existsByPedidoIdAndTipoMovimiento(Long pedidoId, TipoMovimientoCaja tipoMovimiento);
 }

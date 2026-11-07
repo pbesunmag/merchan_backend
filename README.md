@@ -57,11 +57,26 @@ src/main/java/avengersshop/merchan_backend/
 
 **Entidades Clave**
 
-1. `Terminal`: Representa los puntos de venta autorizados que emiten pedidos.
-2. `Categoria`: Agrupación lógica de productos. Sus respuestas DTO incluyen la lista anidada de productos pertenecientes a ella.
-3. `Producto`: Artículos del catálogo. Soportan personalización mediante texto libre, control de disponibilidad y borrado lógico (`activo`).
-4. `Pedido`: Registra la comanda asociada a un terminal de origen, código único autogenerado y el estado en el flujo de trabajo (`EstadoPedido`).
-5. `PedidoProducto`: Entidad intermedia que gestiona la relación muchos-a-muchos entre Pedido y Producto, congelando el `precioUnitario` al momento de la compra.
+1. `Terminal`: Puntos de venta autorizados que emiten pedidos.
+2. `Categoria`: Agrupación lógica de productos. Sus respuestas DTO incluyen la lista anidada de productos.
+3. `Producto` (y `ProductoTalla`): Artículos del catálogo con stock, tallas, personalización y borrado lógico (`activo`).
+4. `Pedido`: Comanda con terminal de origen, código único autogenerado y estado (`EstadoPedido`).
+5. `PedidoProducto` (tabla `pedido_producto`): Línea del pedido. Congela el `precioUnitario` y guarda:
+   * `talla` (`VARCHAR(10)`)
+   * `texto_personalizado` (`VARCHAR(500)`)
+   * **`variante` (`VARCHAR(100)`)**: variante elegida (modelo, color, héroe…). Es opcional y viaja en el checkout (`AgregarProductoPedidoDTO.variante`) y en `LineaPedidoDTO.variante`, por lo que llega a la vista de preparación.
+6. `MovimientoCaja` (tabla `movimientos_caja`): Libro contable. Cada apunte guarda tipo (`FONDO_INICIAL`, `VENTA`, `DEVOLUCION`, `DIFERENCIA_CAMBIO`), importe y `saldo_resultante`.
+
+> El esquema se actualiza solo (`spring.jpa.hibernate.ddl-auto=update`): la columna `variante` se crea al arrancar.
+
+**Flujo de caja**
+
+* `POST /api/pedidos/checkout` crea el pedido en `CREADO` y descuenta stock. **No registra movimiento de caja.**
+* Al cambiar el estado a `PAGO_ACEPTADO` (`PATCH /api/pedidos/{id}/estado`) se asienta un movimiento `VENTA` por el total del pedido (saldo anterior + total). Si ya hay una venta vigente para el pedido, no se duplica.
+* Cancelar el pedido o revertirlo a `CREADO` genera un movimiento `DEVOLUCION` que anula la venta vigente.
+* Pedidos heredados sin pago registrado asientan la venta al pasar a `ENTREGADO`.
+* Las devoluciones y cambios de postventa generan `DEVOLUCION` y `DIFERENCIA_CAMBIO`.
+* El saldo actual se consulta en `GET /api/caja/metricas?periodo=...` (campo `saldoActualCaja`). Sin apuntes, la caja parte de un fondo base de 500 €.
 
 ---
 
@@ -139,34 +154,57 @@ Asegúrate de que las credenciales coincidan con las de tu usuario local de MySQ
 
 ## 📌 Resumen de Endpoints REST
 
-El servidor se iniciará por defecto en `http://localhost:8080`
+El servidor se inicia por defecto en `http://localhost:8080`.
 
 ### 🖥️ Terminales (`/api/terminales`)
-* `GET /api/terminales` - Listar todas las terminales de venta.
-* `POST /api/terminales` - Crear nueva terminal de venta.
+* `GET /api/terminales` - Listar terminales.
+* `POST /api/terminales` - Crear terminal.
 
 ### 🏷️ Categorías (`/api/categorias`)
-* `GET /api/categorias` - Listar todas las categorías con sus productos anidados.
-* `GET /api/categorias/{id}` - Obtener el detalle de una categoría concreta por ID con sus productos.
-* `POST /api/categorias` - Crear nueva categoría.
-* `PUT /api/categorias/{id}` - Actualizar una categoría existente.
+* `GET /api/categorias` - Listar categorías con sus productos.
+* `GET /api/categorias/{id}` - Detalle de una categoría.
+* `POST /api/categorias` - Crear categoría.
+* `PUT /api/categorias/{id}` - Actualizar categoría.
 
 ### 📦 Productos (`/api/productos`)
-* `GET /api/productos` - Listar productos paginados (admite `page`, `size`, `sort`, filtro opcional por `idCategoria` y por estado `activos`).
-* `GET /api/productos/{id}` - Obtener los detalles de un producto específico por su ID.
-* `POST /api/productos` - Crear nuevo producto en el catálogo.
-* `PUT /api/productos/{id}` - Actualizar un producto existente.
-* `PATCH /api/productos/{id}/desactivar` - Desactivar/borrado lógico de un producto.
-* `PATCH /api/productos/{id}/reactivar` - Reactivar un producto previamente desactivado.
+* `GET /api/productos` - Listado paginado (`page`, `size`, `sort`, `idCategoria`, `activos`).
+* `GET /api/productos/{id}` - Detalle.
+* `GET /api/productos/{id}/tallas` - Stock por talla.
+* `POST /api/productos` - Crear producto.
+* `POST /api/productos/{id}/tallas` - Añadir talla.
+* `PUT /api/productos/{id}` - Actualizar producto.
+* `PUT /api/productos/{id}/tallas/{talla}` - Actualizar talla.
+* `PATCH|PUT /api/productos/{id}/stock` - Ajustar stock.
+* `PATCH|PUT /api/productos/{id}/tallas/{talla}/stock` - Ajustar stock de una talla.
+* `PATCH /api/productos/{id}/desactivar` - Borrado lógico.
+* `PATCH /api/productos/{id}/reactivar` - Reactivar producto.
 
 ### 📋 Pedidos (`/api/pedidos`)
-* `POST /api/pedidos` - Iniciar un nuevo pedido desde terminal generando un código automático.
-* `POST /api/pedidos/{pedidoId}/productos` - Añadir un producto con opción de texto personalizado.
-* `DELETE /api/pedidos/{pedidoId}/productos/{productoId}` - Eliminar una línea de producto del pedido.
-* `PATCH /api/pedidos/{pedidoId}/estado` - Cambiar el estado del pedido en la cadena de montaje/pago.
-* `GET /api/pedidos` - Listar todos los pedidos (admite filtro por `estadoPedido`).
-* `GET /api/pedidos/codigo/{codigo}` - Consultar la información completa de un pedido mediante su código único.
+* `POST /api/pedidos/checkout` - Checkout atómico: pedido + líneas (con `variante`) en una transacción. Deja el pedido en `CREADO` sin mover caja.
+* `POST /api/pedidos` - Crear un pedido vacío.
+* `POST /api/pedidos/{pedidoId}/productos` - Añadir una línea (admite `talla`, `textoPersonalizado`, `variante`).
+* `DELETE /api/pedidos/{pedidoId}/productos/{productoId}` - Eliminar una línea.
+* `PATCH /api/pedidos/{pedidoId}/estado` - Cambiar estado. `PAGO_ACEPTADO` registra la venta en caja.
+* `GET /api/pedidos` - Listado paginado (filtro por `estado`).
+* `GET /api/pedidos/codigo/{codigo}` - Consulta por código.
 * `GET /api/pedidos/pantalla` - Vista resumida para pantallas del local.
+* `POST /api/pedidos/{id}/devolucion` - Devolución total de un pedido entregado.
+* `POST /api/pedidos/{id}/devolucion-linea` - Devolución de una línea.
+* `POST /api/pedidos/{id}/cambio-producto` - Cambio de artículos.
+
+### 💰 Caja (`/api/caja`)
+* `GET /api/caja/metricas?periodo={dia|mes|anio}` - Saldo actual, ingresos, reembolsos, beneficio y transacciones.
+
+### 📊 Estadísticas (`/api/estadisticas`)
+* `GET /api/estadisticas/producto-mas-vendido`
+* `GET /api/estadisticas/productos-mas-vendidos`
+
+### 🧾 Informes (`/api/informes`)
+* `GET /api/informes/ventas/csv`
+* `GET /api/informes/ventas/completo`
+
+### 🔌 WebSocket
+* Endpoint `/ws` (STOMP). Topic `/topic/productos-stock`: publica el stock actualizado de un producto tras cada commit.
 
 ---
 

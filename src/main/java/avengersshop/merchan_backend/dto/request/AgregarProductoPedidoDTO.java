@@ -24,4 +24,7 @@ public class AgregarProductoPedidoDTO {
 
     // Texto opcional si el producto es personalizable
     private String textoPersonalizado;
+
+    // Variante elegida (opcional), ej. "Taza Puño de Hulk"
+    private String variante;
 }
