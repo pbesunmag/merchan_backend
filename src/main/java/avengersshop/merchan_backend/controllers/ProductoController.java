@@ -1,5 +1,6 @@
 package avengersshop.merchan_backend.controllers;
 
+import avengersshop.merchan_backend.dto.request.ActualizarDescuentoProductoDTO;
 import avengersshop.merchan_backend.dto.request.AjustarStockDTO;
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
@@ -173,5 +174,22 @@ public class ProductoController {
     @PatchMapping("/{id}/reactivar")
     public ResponseEntity<ProductoDTO> reactivarProducto(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(productoService.reactivarProducto(id));
+    }
+
+    @Operation(
+            summary = "Actualizar descuento fijo de un producto",
+            description = "Permite a un empleado configurar el porcentajeDescuento y tieneDescuentoFijo de un artículo."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Descuento del producto actualizado con éxito"),
+            @ApiResponse(responseCode = "400", description = "Porcentaje inválido"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
+    @PatchMapping("/{id}/descuento")
+    public ResponseEntity<ProductoDTO> actualizarDescuento(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarDescuentoProductoDTO dto
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(productoService.actualizarDescuentoProducto(id, dto));
     }
 }

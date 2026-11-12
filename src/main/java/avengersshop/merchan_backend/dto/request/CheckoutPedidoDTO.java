@@ -21,4 +21,6 @@ public class CheckoutPedidoDTO {
     // Cada línea reutiliza el contrato de AgregarProductoPedidoDTO (productoId, cantidad, talla, textoPersonalizado)
     @NotEmpty(message = "El pedido debe contener al menos una línea")
     private List<@Valid @NotNull AgregarProductoPedidoDTO> lineas;
+
+    private String codigoCupon;
 }

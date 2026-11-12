@@ -28,6 +28,8 @@ public class ProductoDTO {
     private Boolean activo;
     private String nombreCategoria;
     private String imagenUrl;
+    private Integer porcentajeDescuento;
+    private Boolean tieneDescuentoFijo;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 
@@ -57,6 +59,8 @@ public class ProductoDTO {
                 // Extrae el nombre de la categoría evitando un posible NullPointerException
                 producto.getCategoria() != null ? producto.getCategoria().getNombre() : null,
                 producto.getImagenUrl(),
+                producto.getPorcentajeDescuento() != null ? producto.getPorcentajeDescuento() : 0,
+                Boolean.TRUE.equals(producto.getTieneDescuentoFijo()),
                 producto.getFechaCreacion(),
                 producto.getFechaActualizacion()
         );

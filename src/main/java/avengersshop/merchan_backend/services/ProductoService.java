@@ -1,5 +1,6 @@
 package avengersshop.merchan_backend.services;
 
+import avengersshop.merchan_backend.dto.request.ActualizarDescuentoProductoDTO;
 import avengersshop.merchan_backend.dto.request.AjustarStockDTO;
 import avengersshop.merchan_backend.dto.request.CrearProductoDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
@@ -314,5 +315,33 @@ public class ProductoService {
         notificarActualizacionStock(ProductoDTO.fromEntity(productoActualizado));
 
         return guardada;
+    }
+
+    // Actualiza el porcentaje de descuento fijo y su activación para un producto
+    public ProductoDTO actualizarDescuentoProducto(Long productoId, ActualizarDescuentoProductoDTO dto) {
+        Producto producto = iProductoRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+
+        int porcentaje = dto.getPorcentajeDescuento() != null ? dto.getPorcentajeDescuento() : 0;
+        if (porcentaje < 0 || porcentaje > 100) {
+            throw new BadRequestException("El porcentaje de descuento debe estar entre 0 y 100.");
+        }
+
+        boolean tieneDescuento = dto.getTieneDescuentoFijo() != null
+                ? dto.getTieneDescuentoFijo()
+                : porcentaje > 0;
+
+        if (!tieneDescuento || porcentaje == 0) {
+            producto.setPorcentajeDescuento(0);
+            producto.setTieneDescuentoFijo(false);
+        } else {
+            producto.setPorcentajeDescuento(porcentaje);
+            producto.setTieneDescuentoFijo(true);
+        }
+
+        Producto actualizado = iProductoRepository.save(producto);
+        ProductoDTO resultado = ProductoDTO.fromEntity(actualizado);
+        notificarActualizacionStock(resultado);
+        return resultado;
     }
 }

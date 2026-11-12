@@ -9,11 +9,13 @@ import avengersshop.merchan_backend.dto.response.PedidoPantallaDTO;
 import avengersshop.merchan_backend.dto.response.ProductoDTO;
 import avengersshop.merchan_backend.exceptions.BadRequestException;
 import avengersshop.merchan_backend.exceptions.ResourceNotFoundException;
+import avengersshop.merchan_backend.models.CuponDescuento;
 import avengersshop.merchan_backend.models.EstadoPedido;
 import avengersshop.merchan_backend.models.Pedido;
 import avengersshop.merchan_backend.models.PedidoProducto;
 import avengersshop.merchan_backend.models.Producto;
 import avengersshop.merchan_backend.models.ProductoTalla;
+import avengersshop.merchan_backend.models.Promocion;
 import avengersshop.merchan_backend.models.Terminal;
 import avengersshop.merchan_backend.models.TipoMovimientoCaja;
 import avengersshop.merchan_backend.repositories.IPedidoRepository;
@@ -29,6 +31,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -52,19 +55,25 @@ public class PedidoService {
     private final ITerminalRepository iTerminalRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final CajaService cajaService;
+    private final PromocionService promocionService;
+    private final CuponDescuentoService cuponService;
 
     public PedidoService(IPedidoRepository iPedidoRepository,
                          IProductoRepository iProductoRepository,
                          IProductoTallaRepository iProductoTallaRepository,
                          ITerminalRepository iTerminalRepository,
                          SimpMessagingTemplate messagingTemplate,
-                         CajaService cajaService) {
+                         CajaService cajaService,
+                         PromocionService promocionService,
+                         CuponDescuentoService cuponService) {
         this.iPedidoRepository = iPedidoRepository;
         this.iProductoRepository = iProductoRepository;
         this.iProductoTallaRepository = iProductoTallaRepository;
         this.iTerminalRepository = iTerminalRepository;
         this.messagingTemplate = messagingTemplate;
         this.cajaService = cajaService;
+        this.promocionService = promocionService;
+        this.cuponService = cuponService;
     }
 
     // Emite el nuevo stock por WebSocket. Si hay una transacción activa, se difiere hasta el commit
@@ -241,26 +250,52 @@ public class PedidoService {
             }
         }
 
-        // 2. Escrituras: pedido, líneas e inventario (la venta se asienta en caja al confirmar el pago)
+        // 2. Validación de cupón opcional antes de realizar escrituras
+        CuponDescuento cuponAplicado = null;
+        if (checkoutDTO.getCodigoCupon() != null && !checkoutDTO.getCodigoCupon().isBlank()) {
+            cuponAplicado = cuponService.obtenerEntidadCuponValido(checkoutDTO.getCodigoCupon());
+        }
+
+        // 3. Escrituras: pedido, líneas e inventario (la venta se asienta en caja al confirmar el pago)
         Pedido pedido = new Pedido();
         pedido.setTerminal(terminal);
         pedido.setEstado(EstadoPedido.CREADO);
         pedido = guardarConCodigo(pedido);
+
+        int pctCupon = cuponAplicado != null && cuponAplicado.getPorcentajeDescuento() != null
+                ? cuponAplicado.getPorcentajeDescuento()
+                : 0;
 
         Set<Producto> productosAfectados = new LinkedHashSet<>();
         for (LineaValidada linea : lineasValidadas) {
             descontarStock(linea.producto(), linea.talla(), linea.cantidad());
             productosAfectados.add(linea.producto());
 
+            Producto prod = linea.producto();
+            BigDecimal precioUnitarioFinal;
+            if (Boolean.TRUE.equals(prod.getTieneDescuentoFijo())
+                    && prod.getPorcentajeDescuento() != null
+                    && prod.getPorcentajeDescuento() > 0) {
+                precioUnitarioFinal = aplicarPorcentajeDescuento(prod.getPrecio(), prod.getPorcentajeDescuento());
+            } else if (cuponAplicado != null && pctCupon > 0) {
+                precioUnitarioFinal = aplicarPorcentajeDescuento(prod.getPrecio(), pctCupon);
+            } else {
+                precioUnitarioFinal = prod.getPrecio();
+            }
+
             PedidoProducto nuevaLinea = new PedidoProducto();
             nuevaLinea.setPedido(pedido);
-            nuevaLinea.setProducto(linea.producto());
+            nuevaLinea.setProducto(prod);
             nuevaLinea.setCantidad(linea.cantidad());
-            nuevaLinea.setPrecioUnitario(linea.producto().getPrecio()); // Precio oficial del catálogo, nunca del cliente
+            nuevaLinea.setPrecioUnitario(precioUnitarioFinal); // Precio neto congelado en la línea
             nuevaLinea.setTalla(linea.talla());
             nuevaLinea.setTextoPersonalizado(linea.textoPersonalizado());
             nuevaLinea.setVariante(linea.variante());
             pedido.getProductos().add(nuevaLinea);
+        }
+
+        if (cuponAplicado != null) {
+            cuponService.registrarUsoCupon(cuponAplicado);
         }
 
         Pedido pedidoGuardado = iPedidoRepository.save(pedido);
@@ -269,6 +304,24 @@ public class PedidoService {
         productosAfectados.forEach(this::notificarActualizacionStock);
 
         return PedidoDTO.fromEntity(pedidoGuardado);
+    }
+
+    private BigDecimal aplicarPorcentajeDescuento(BigDecimal precioOriginal, int porcentaje) {
+        if (precioOriginal == null) {
+            return BigDecimal.ZERO;
+        }
+        if (porcentaje <= 0) {
+            return precioOriginal.setScale(2, RoundingMode.HALF_UP);
+        }
+        int pctSeguro = Math.min(100, porcentaje);
+        return precioOriginal
+                .multiply(BigDecimal.valueOf(100 - pctSeguro))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public PedidoDTO procesarCheckout(CheckoutPedidoDTO checkoutDTO) {
+        return checkout(checkoutDTO);
     }
 
     // Crear nuevo pedido con generación automática de código
@@ -317,11 +370,19 @@ public class PedidoService {
                 linea.setTextoPersonalizado(agregarProductoPedidoDTO.getTextoPersonalizado());
             }
         } else {
+            int pctPromo = promocionService.obtenerEntidadPromocionVigente()
+                    .map(Promocion::getPorcentajeDescuento)
+                    .orElse(0);
+            int pctFijo = Boolean.TRUE.equals(producto.getTieneDescuentoFijo()) && producto.getPorcentajeDescuento() != null
+                    ? producto.getPorcentajeDescuento()
+                    : 0;
+            BigDecimal precioUnitarioFinal = aplicarPorcentajeDescuento(producto.getPrecio(), Math.max(pctFijo, pctPromo));
+
             PedidoProducto nuevaLinea = new PedidoProducto();
             nuevaLinea.setPedido(pedido);
             nuevaLinea.setProducto(producto);
             nuevaLinea.setCantidad(cantidadSolicitada);
-            nuevaLinea.setPrecioUnitario(producto.getPrecio());
+            nuevaLinea.setPrecioUnitario(precioUnitarioFinal);
             nuevaLinea.setTalla(tallaSolicitada);
             nuevaLinea.setTextoPersonalizado(agregarProductoPedidoDTO.getTextoPersonalizado());
             nuevaLinea.setVariante(normalizarVariante(agregarProductoPedidoDTO.getVariante()));

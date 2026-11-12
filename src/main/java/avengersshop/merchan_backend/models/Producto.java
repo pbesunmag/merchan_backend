@@ -59,6 +59,12 @@ public class Producto {
     @Column(nullable = false, name = "activo")
     private boolean activo = true;
 
+    @Column(nullable = false, name = "porcentaje_descuento", columnDefinition = "INT DEFAULT 0")
+    private Integer porcentajeDescuento = 0;
+
+    @Column(nullable = false, name = "tiene_descuento_fijo", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean tieneDescuentoFijo = false;
+
     @ManyToOne(fetch = FetchType.LAZY) // LAZY para optimizar el rendimiento y evitar consultas redundantes a la tabla de categorías.
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
